@@ -3,10 +3,19 @@ import ctypes as ct
 from enum import IntEnum
 
 # Constants and other defines from from libmseed.h
+MAXRECLEN = 131172
 LM_SIDLEN = 64
 NSTMODULUS = 1000000000
 NSTERROR = -2145916800000000000
 NSTUNSET = -2145916799999999999
+
+DE_TEXT = 0   # Text encoding (UTF-8)
+DE_INT16 = 1   # 16-bit integer
+DE_INT32 = 3   # 32-bit integer
+DE_FLOAT32 = 4   # 32-bit float (IEEE)
+DE_FLOAT64 = 5   # 64-bit float (IEEE)
+DE_STEIM1 = 10  # Steim-1 compressed integers
+DE_STEIM2 = 11  # Steim-2 compressed integers
 
 MS_ENDOFFILE = 1  # End of file reached return value
 MS_NOERROR = 0  # No error
@@ -31,6 +40,7 @@ MSF_MAINTAINMSTL = ct.c_uint32(0x0200)  # [TraceList] Do not modify a trace list
 
 MSSWAP_HEADER = ct.c_uint8(0x01)  # Header needed byte swapping
 MSSWAP_PAYLOAD = ct.c_uint8(0x02)  # Data payload needed byte swapping
+
 
 class ctypesEnum(IntEnum):
     """A ctypes-compatible IntEnum superclass/"""

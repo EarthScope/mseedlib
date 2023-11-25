@@ -2,7 +2,8 @@ from .__version__ import __version__, libmseed_version
 from .definitions import NSTERROR, NSTUNSET, TimeFormat, SubSecond
 from .exceptions import MseedLibError
 from .msrecord import MSRecord
-from .msrecord_path_reader import MSRecordPathReader
+from .msrecord_reader import MSRecordReader
+from .msrecord_buffer_reader import MSRecordBufferReader
 
 
 __all__ = ["MSRecord",

@@ -318,7 +318,7 @@ msr3_pack_mseed3 (const MS3Record *msr, void (*record_handler) (char *, int, voi
 
     /* Update number of samples and data length */
     *pMS3FSDH_NUMSAMPLES(rawrec) = HO4u (packsamples, swapflag);
-    *pMS3FSDH_DATALENGTH(rawrec) = HO2u (datalength, swapflag);
+    *pMS3FSDH_DATALENGTH(rawrec) = HO4u (datalength, swapflag);
 
     /* Calculate CRC (with CRC field set to 0) and set */
     memset (pMS3FSDH_CRC(rawrec), 0, sizeof(uint32_t));
@@ -519,7 +519,7 @@ msr3_pack_header3 (const MS3Record *msr, char *record, uint32_t recbuflen, int8_
   if (recbuflen < (uint32_t)(MS3FSDH_LENGTH + sidlength + msr->extralength))
   {
     ms_log (2, "%s: Buffer length (%d) is not large enough for fixed header (%d), SID (%"PRIsize_t"), and extra (%d)\n",
-            msr->sid, maxreclen, MS3FSDH_LENGTH, sidlength, msr->extralength);
+            msr->sid, recbuflen, MS3FSDH_LENGTH, sidlength, msr->extralength);
     return -1;
   }
 

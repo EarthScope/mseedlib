@@ -114,6 +114,7 @@ extern "C" {
     #define strncasecmp _strnicmp
     #define strtoull _strtoui64
     #define fileno _fileno
+    #define fdopen _fdopen
   #endif
 
   /* Extras needed for MinGW */
@@ -375,7 +376,7 @@ typedef struct MS3Record {
   void           *datasamples;       //!< Data samples, \a numsamples of type \a sampletype
   size_t          datasize;          //!< Size of datasamples buffer in bytes
   int64_t         numsamples;        //!< Number of data samples in datasamples
-  char            sampletype;        //!< Sample type code: a, i, f, d @ref sample-types
+  char            sampletype;        //!< Sample type code: t, i, f, d @ref sample-types
 } MS3Record;
 
 extern int msr3_parse (const char *record, uint64_t recbuflen, MS3Record **ppmsr,
@@ -690,7 +691,8 @@ typedef struct LMIO
   {
     LMIO_NULL = 0,   //!< IO handle type is undefined
     LMIO_FILE = 1,   //!< IO handle is FILE-type
-    LMIO_URL  = 2    //!< IO handle is URL-type
+    LMIO_URL  = 2,   //!< IO handle is URL-type
+    LMIO_FD   = 3    //!< IO handle is a provided file descriptor
   } type;            //!< IO handle type
   void *handle;      //!< Primary IO handle, either file or URL
   void *handle2;     //!< Secondary IO handle for URL
@@ -756,6 +758,7 @@ extern int64_t msr3_writemseed (MS3Record *msr, const char *mspath, int8_t overw
 extern int64_t mstl3_writemseed (MS3TraceList *mst, const char *mspath, int8_t overwrite,
                                  int maxreclen, int8_t encoding, uint32_t flags, int8_t verbose);
 extern int libmseed_url_support (void);
+extern MS3FileParam *ms3_mstl_init_fd (int fd);
 /** @} */
 
 /** @addtogroup string-functions
@@ -986,6 +989,7 @@ extern int mseh_add_recenter_r (MS3Record *msr, const char *ptr,
 
 extern int mseh_serialize (MS3Record *msr, LM_PARSED_JSON **parsestate);
 extern void mseh_free_parsestate (LM_PARSED_JSON **parsestate);
+extern int mseh_replace (MS3Record *msr, char *jsonstring);
 
 extern int mseh_print (const MS3Record *msr, int indent);
 /** @} */
@@ -1194,6 +1198,10 @@ extern int ms_rlog_free (MSLogParam *logp);
 
 /** @addtogroup leapsecond
     @brief Utilities for handling leap seconds
+
+    @note The library contains an embedded list of leap seconds through
+    year 2023.  These functions are only needed if leap seconds are added
+    in 2024 and beyond.
 
     The library contains functionality to load a list of leap seconds
     into a global list, which is then used to determine when leap
