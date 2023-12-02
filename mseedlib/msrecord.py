@@ -1,7 +1,7 @@
 import ctypes as ct
 from .clib import clibmseed, wrap_function
 from .definitions import *
-from .util import ms_nstime2timestr, ms_encodingstr
+from .util import ms_nstime2timestr, ms_timestr2nstime, ms_encodingstr
 from .exceptions import *
 from json import dumps as json_dumps
 
@@ -317,6 +317,13 @@ class MSRecord():
 
         return str(c_timestr.value, 'utf-8')
 
+    def set_start_time_str(self, value):
+        '''Set the start time to the provided date-time string'''
+        self.start_time = ms_timestr2nstime(bytes(value, 'utf-8'))
+
+        if self.start_time == NSTERROR:
+            raise ValueError(f'Invalid start time string: {value}')
+
     def end_time_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE):
         '''Return start time as formatted string'''
         c_timestr = ct.create_string_buffer(32)
@@ -330,7 +337,7 @@ class MSRecord():
         return ms_encodingstr(self._msr.contents.encoding).decode('utf-8')
 
     def print(self, details=0):
-        '''Print details of the record, with varying levels of `details`'''
+        '''Print details of the record to stdout, with varying levels of `details`'''
         self._msr3_print(self._msr, details)
 
     def set_record_handler(self, record_handler, handler_data=None):
@@ -375,7 +382,7 @@ class MSRecord():
 
         If `flush_data` is False, as many fully-packed records will be created as possible.
         The `data_samples` sequence will _not_ be modified, it is up to the caller to
-        adjust the sequence to remove samples that have been packed.
+        adjust the sequence to remove samples that have been packed if desired.
 
         Returns a tuple of (packed_samples, packed_records)
         '''
@@ -416,7 +423,7 @@ class MSRecord():
         packed_records = self._msr3_pack(self._msr, self._ctypes_record_handler, None,
                                          ct.byref(packed_samples), pack_flags, verbose)
 
-        # Restore the original samplecnt, numsamples, and datasamples pointer
+        # Restore the original samplecnt, numsamples, sampletype, and datasamples
         if data_samples is not None:
             self._msr.contents.datasamples = msr_datasamples
             self._msr.contents.sampletype = msr_sampletype

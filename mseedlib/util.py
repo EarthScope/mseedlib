@@ -5,7 +5,7 @@ from .clib import clibmseed, wrap_function
 ms_nstime2timestr = wrap_function(clibmseed, 'ms_nstime2timestr', ct.c_int,
                                   [ct.c_int64, ct.c_char_p, ct.c_int, ct.c_int])
 
-ms_timestr2nstime = wrap_function(clibmseed, 'ms_nstime2timestr', ct.c_int64,
+ms_timestr2nstime = wrap_function(clibmseed, 'ms_timestr2nstime', ct.c_int64,
                                   [ct.c_char_p])
 
 ms_encodingstr = wrap_function(clibmseed, 'ms_encodingstr', ct.c_char_p, [ct.c_uint8])
