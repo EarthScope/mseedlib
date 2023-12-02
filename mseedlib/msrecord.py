@@ -1,5 +1,4 @@
 import ctypes as ct
-import array as arr
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .util import ms_nstime2timestr, ms_encodingstr
@@ -12,6 +11,8 @@ class MSRecord():
 
     def __init__(self):
         super().__init__()
+
+        self._record_handler = None
 
         self._msr3_init = wrap_function(clibmseed, 'msr3_init', ct.POINTER(MS3Record),
                                         [ct.POINTER(MS3Record)])
@@ -30,6 +31,11 @@ class MSRecord():
 
         self._mseh_replace = wrap_function(clibmseed, 'mseh_replace', ct.c_int,
                                            [ct.POINTER(MS3Record), ct.c_char_p])
+
+        self._msr3_pack = wrap_function(clibmseed, 'msr3_pack', ct.c_int,
+                                        [ct.POINTER(MS3Record), ct.c_void_p, ct.c_void_p,
+                                         ct.POINTER(ct.c_int64),
+                                         ct.c_uint32, ct.c_int8])
 
         # Allocate and initialize an MS3Record Structure
         self._msr = self._msr3_init(None)
@@ -85,7 +91,12 @@ class MSRecord():
 
     @sourceid.setter
     def sourceid(self, value):
-        '''Set source identifier'''
+        '''Set source identifier
+
+        The source identifier is limited to 64 characters.
+        Typicall this is an FDSN Source Identifier:
+        https://docs.fdsn.org/projects/source-identifiers
+        '''
         self._msr.contents.sid = bytes(value, 'utf-8')
 
     @property
@@ -96,6 +107,9 @@ class MSRecord():
     @format_version.setter
     def format_version(self, value):
         '''Set format version'''
+        if value not in [2, 3]:
+            raise ValueError(f'Invalid miniSEED format version: {value}')
+
         self._msr.contents.formatversion = value
 
     @property
@@ -149,7 +163,16 @@ class MSRecord():
 
     @sample_rate.setter
     def sample_rate(self, value):
-        '''Set sample rate'''
+        '''Set sample rate
+
+        When the value is positive it represents the rate in samples per second,
+        when it is negative it represents the sample period in seconds.
+        The specification recommends using the negative value sample period notation
+        for rates less than 1 samples per second to retain resolution.
+
+        Set to 0.0 if no time series data are included in the record, e.g. header-only
+        record or text payload.
+        '''
         self._msr.contents.samprate = value
 
     @property
@@ -169,7 +192,10 @@ class MSRecord():
 
     @encoding.setter
     def encoding(self, value):
-        '''Set encoding format code'''
+        '''Set encoding format code
+
+        See https://docs.fdsn.org/projects/miniseed3/en/latest/data-encodings.html
+        '''
         self._msr.contents.encoding = value
 
     @property
@@ -186,11 +212,6 @@ class MSRecord():
     def sample_count(self):
         '''Return sample count'''
         return self._msr.contents.samplecnt
-
-    @sample_count.setter
-    def sample_count(self, value):
-        '''Set sample count'''
-        self._msr.contents.samplecnt = value
 
     @property
     def crc(self):
@@ -245,9 +266,7 @@ class MSRecord():
         when the object is destroyed.  If you wish to keep the data, you must
         make a copy.
         '''
-        number_samples = self.number_samples
-
-        if number_samples <= 0:
+        if self.number_samples <= 0:
             raise ValueError("No decoded samples available")
 
         if self.sample_type == 'i':
@@ -272,7 +291,7 @@ class MSRecord():
 
     @property
     def number_samples(self):
-        '''Return number of decoded samples'''
+        '''Return number of decoded samples at MSRecord.data_samples'''
         return self._msr.contents.numsamples
 
     @property
@@ -313,3 +332,98 @@ class MSRecord():
     def print(self, details=0):
         '''Print details of the record, with varying levels of `details`'''
         self._msr3_print(self._msr, details)
+
+    def set_record_handler(self, record_handler, handler_data=None):
+        '''Set the record handler function and data called by MSRecord.pack()
+
+        The record_handler(record, handler_data) function must accept two arguments:
+
+                record:         A buffer containing a miniSEED record
+                handler_data:   The handler_data object passed to MSRecord.set_record_handler()
+
+        The function must use or copy the record buffer as the memory may be reused
+        on subsequent iterations.
+        '''
+        self._record_handler = record_handler
+        self._record_handler_data = handler_data
+
+        # Set up ctypes callback function to the wrapper function
+        RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
+        self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
+
+    def _record_handler_wrapper(self, record, record_length, handlerdata):
+        '''Callback function for msr3_pack()
+
+        The `handlerdata` argument is purposely unused, as handler data is passed
+        via the class instance instead of through the C layer.
+        '''
+        # Cast the record buffer to a ctypes array for use in Python and pass to handler
+        self._record_handler(ct.cast(record, ct.POINTER((ct.c_char * record_length))).contents,
+                             self._record_handler_data)
+
+    def pack(self, data_samples=None, sample_type=None, flush_data=True, verbose=0) -> (int, int):
+        '''Pack `data_samples` into miniSEED record(s) and call `MSRecrod.record_handler()`
+
+        The record_handler() function must be registered with MSRecord.set_record_handler().
+
+        If `data_samples` is not None, it must be a sequence of samples that can be
+        packed into the type specified by `sample_type` and appropriate for MSRecord.encoding.
+        If `data_samples` is None, any samples associated with the MSRecord will be packed.
+
+        If `flush_data` is True, all data samples will be packed.  In the case of miniSEED
+        format version 2, this will likely create an unfilled final record.
+
+        If `flush_data` is False, as many fully-packed records will be created as possible.
+        The `data_samples` sequence will _not_ be modified, it is up to the caller to
+        adjust the sequence to remove samples that have been packed.
+
+        Returns a tuple of (packed_samples, packed_records)
+        '''
+
+        if self._record_handler is None:
+            raise ValueError('No record handler function registered, see MSRecord.set_record_handler()')
+
+        pack_flags = ct.c_uint32(0)
+        packed_samples = ct.c_int64(0)
+
+        if flush_data:
+            pack_flags.value |= MSF_FLUSHDATA.value
+
+        if data_samples is not None:
+            msr_datasamples = self._msr.contents.datasamples
+            msr_sampletype = self._msr.contents.sampletype
+            msr_numsamples = self._msr.contents.numsamples
+            msr_samplecnt = self._msr.contents.samplecnt
+
+            len_data_samples = len(data_samples)
+
+            if sample_type == 'i':
+                ctypes_data = (ct.c_int32 * len_data_samples)(*data_samples)
+            elif sample_type == 'f':
+                ctypes_data = (ct.c_float * len_data_samples)(*data_samples)
+            elif sample_type == 'd':
+                ctypes_data = (ct.c_double * len_data_samples)(*data_samples)
+            elif sample_type == 't':
+                ctypes_data = (ct.c_char * len_data_samples)(*data_samples)
+            else:
+                raise ValueError(f"Unknown sample type: {sample_type}")
+
+            self._msr.contents.datasamples = ct.cast(ct.byref(ctypes_data), ct.c_void_p)
+            self._msr.contents.sampletype = bytes(sample_type, 'utf-8')
+            self._msr.contents.numsamples = len_data_samples
+            self._msr.contents.samplecnt = len_data_samples
+
+        packed_records = self._msr3_pack(self._msr, self._ctypes_record_handler, None,
+                                         ct.byref(packed_samples), pack_flags, verbose)
+
+        # Restore the original samplecnt, numsamples, and datasamples pointer
+        if data_samples is not None:
+            self._msr.contents.datasamples = msr_datasamples
+            self._msr.contents.sampletype = msr_sampletype
+            self._msr.contents.numsamples = msr_numsamples
+            self._msr.contents.samplecnt = msr_samplecnt
+
+        if packed_records < 0:
+            raise MseedLibError(packed_records, f'Error packing miniSEED record(s)')
+
+        return (packed_samples.value, packed_records)
