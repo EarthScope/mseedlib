@@ -4,6 +4,7 @@ from .exceptions import MseedLibError
 from .msrecord import MSRecord
 from .msrecord_reader import MSRecordReader
 from .msrecord_buffer_reader import MSRecordBufferReader
+from .mstracelist import MSTraceList
 
 
 __all__ = ["__version__", "libmseed_version",
@@ -12,4 +13,5 @@ __all__ = ["__version__", "libmseed_version",
            "MSRecord",
            "MSRecordReader",
            "MSRecordBufferReader",
+           "MSTraceList",
            ]

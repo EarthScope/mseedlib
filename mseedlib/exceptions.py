@@ -1,7 +1,6 @@
 from .definitions import *
 from .util import ms_errorstr
 
-
 class MseedLibError(ValueError):
     """Exception for libmseed return values"""
 
@@ -18,3 +17,12 @@ class MseedLibError(ValueError):
             library_message = f'Unknown error code: {self.status_code}'
 
         return f"{library_message} {':: ' + self.message if self.message else ''}"
+
+class NoSuchSourceID(ValueError):
+    """Exception for non-existent trace source IDs"""
+
+    def __init__(self, sourceid):
+        self.sourceid = sourceid
+
+    def __str__(self):
+        return f'Source ID not found: {self.sourceid}'

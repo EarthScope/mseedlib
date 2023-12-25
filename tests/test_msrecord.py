@@ -29,32 +29,32 @@ def test_msrecord_creation():
 
     # Test populating an MSRecord object with setters
     msr = MSRecord()
-    msr.record_length = 512
+    msr.reclen = 512
     msr.sourceid = "FDSN:XX_TEST__B_S_X"
-    msr.format_version = 3
+    msr.formatversion = 3
     msr.flags = ct.c_uint8(0x04).value  # Set the 4th bit (clock locked) to 1
-    msr.set_start_time_str("2023-01-02T01:02:03.123456789Z")
-    msr.sample_rate = 50.0
+    msr.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+    msr.samprate = 50.0
     msr.encoding = DataEncoding.STEIM2  # value of 10
-    msr.pub_version = 1
-    msr.extra_headers = json.dumps({"FDSN": {"Time": {"Quality": 80}}})
+    msr.pubversion = 1
+    msr.extra = json.dumps({"FDSN": {"Time": {"Quality": 80}}})
 
-    assert msr.record_length == 512
+    assert msr.reclen == 512
     assert msr.sourceid == "FDSN:XX_TEST__B_S_X"
-    assert msr.format_version == 3
+    assert msr.formatversion == 3
     assert msr.flags_dict() == {'clock_locked': True}
-    assert msr.start_time == 1672621323123456789
-    assert msr.start_time_seconds == 1672621323.1234567
-    assert msr.sample_rate == 50.0
+    assert msr.starttime == 1672621323123456789
+    assert msr.starttime_seconds == 1672621323.1234567
+    assert msr.samprate == 50.0
     assert msr.encoding == 11
-    assert msr.pub_version == 1
-    assert msr.extra_headers == '{"FDSN":{"Time":{"Quality":80}}}'
+    assert msr.pubversion == 1
+    assert msr.extra == '{"FDSN":{"Time":{"Quality":80}}}'
 
     # Test packing of an miniSEED v3 record
     msr.set_record_handler(record_handler, None)
 
-    (packed_samples, packed_records) = msr.pack(data_samples=sine_500,
-                                                sample_type='i',
+    (packed_samples, packed_records) = msr.pack(datasamples=sine_500,
+                                                sampletype='i',
                                                 flush_data=True)
 
     assert packed_samples == 500
@@ -66,10 +66,10 @@ def test_msrecord_creation():
         assert (record_buffer == record_v3)
 
     # Test packing of an miniSEED v2 record
-    msr.format_version = 2
+    msr.formatversion = 2
 
-    (packed_samples, packed_records) = msr.pack(data_samples=sine_500,
-                                                sample_type='i',
+    (packed_samples, packed_records) = msr.pack(datasamples=sine_500,
+                                                sampletype='i',
                                                 flush_data=True)
 
     assert packed_samples == 500

@@ -2,13 +2,17 @@ import os
 import ctypes as ct
 from enum import IntEnum
 
+# Some common definitions from libmseed.h needed by the module
+
 # Constants and other defines from from libmseed.h
 MAXRECLEN = 131172
 LM_SIDLEN = 64
 NSTMODULUS = 1000000000
 NSTERROR = -2145916800000000000
 NSTUNSET = -2145916799999999999
+MSTRACEID_SKIPLIST_HEIGHT = 8
 
+# libmseed error codes
 MS_ENDOFFILE = 1  # End of file reached return value
 MS_NOERROR = 0  # No error
 MS_GENERROR = -1  # Generic unspecified error
@@ -19,6 +23,7 @@ MS_UNKNOWNFORMAT = -5  # Unknown data encoding format
 MS_STBADCOMPFLAG = -6  # Steim, invalid compression flag(s)
 MS_INVALIDCRC = -7  # Invalid CRC
 
+# Flags for reading and writing miniSEED
 MSF_UNPACKDATA = ct.c_uint32(0x0001)  # [Parsing] Unpack data samples
 MSF_SKIPNOTDATA = ct.c_uint32(0x0002)  # [Parsing] Skip input that cannot be identified as miniSEED
 MSF_VALIDATECRC = ct.c_uint32(0x0004)  # [Parsing] Validate CRC (if version 3)
@@ -30,6 +35,7 @@ MSF_PACKVER2 = ct.c_uint32(0x0080)  # [Packing] Pack as miniSEED version 2 inste
 MSF_RECORDLIST = ct.c_uint32(0x0100)  # [TraceList] Build a ::MS3RecordList for each ::MS3TraceSeg
 MSF_MAINTAINMSTL = ct.c_uint32(0x0200)  # [TraceList] Do not modify a trace list when packing
 
+# Byte swap flag
 MSSWAP_HEADER = ct.c_uint8(0x01)  # Header needed byte swapping
 MSSWAP_PAYLOAD = ct.c_uint8(0x02)  # Data payload needed byte swapping
 
@@ -40,6 +46,7 @@ class ctypesEnum(IntEnum):
     def from_param(cls, obj):
         return int(obj)
 
+
 class DataEncoding(ctypesEnum):
     """Data encoding format codes"""
     TEXT = 0  # Text encoding (UTF-8)
@@ -49,6 +56,7 @@ class DataEncoding(ctypesEnum):
     FLOAT64 = 5  # 64-bit float (IEEE)
     STEIM1 = 10  # Steim-1 compressed integers
     STEIM2 = 11  # Steim-2 compressed integers
+
 
 class TimeFormat(ctypesEnum):
     """Time format codes for ms_nstime2timestr() and ms_nstime2timestrz()"""

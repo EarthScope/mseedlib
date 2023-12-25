@@ -64,7 +64,7 @@ class MSRecordBufferReader(MSRecord):
                                  self.parse_flags, self.verbose)
 
         if status == MS_NOERROR:
-            self.source_offset += self.record_length
+            self.source_offset += self.reclen
             return self
         elif status > 0:  # Record detected but not enough data
             return None

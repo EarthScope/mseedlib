@@ -13,36 +13,35 @@ def test_msrecord_read_record_details():
         # Read first record
         msr = msreader.read()
 
-        assert msr.record_length == 542
-        assert msr.swap_flag == 2
-        assert msr.swap_flag_dict() == {'header_swapped': False, 'payload_swapped': True}
+        assert msr.reclen == 542
+        assert msr.swapflag == 2
+        assert msr.swapflag_dict() == {'header_swapped': False, 'payload_swapped': True}
         assert msr.sourceid == 'FDSN:IU_COLA_00_B_H_1'
-        assert msr.format_version == 3
+        assert msr.formatversion == 3
         assert msr.flags == 4
         assert msr.flags_dict() == {'clock_locked': True}
-        assert msr.start_time == 1267253400019539000
-        assert msr.start_time_seconds == 1267253400.019539
-        assert msr.start_time_str(timeformat=TimeFormat.ISOMONTHDAY_Z) == '2010-02-27T06:50:00.019539Z'
-        assert msr.start_time_str(timeformat=TimeFormat.SEEDORDINAL, subsecond=SubSecond.NONE) == '2010,058,06:50:00'
-        assert msr.sample_rate == 20.0
-        assert msr.sample_rate_raw == 20.0
+        assert msr.starttime == 1267253400019539000
+        assert msr.starttime_seconds == 1267253400.019539
+        assert msr.starttime_str(timeformat=TimeFormat.ISOMONTHDAY_Z) == '2010-02-27T06:50:00.019539Z'
+        assert msr.starttime_str(timeformat=TimeFormat.SEEDORDINAL, subsecond=SubSecond.NONE) == '2010,058,06:50:00'
+        assert msr.samprate == 20.0
+        assert msr.samprate_raw == 20.0
         assert msr.encoding == 11
         assert msr.encoding_str() == 'STEIM-2 integer compression'
-        assert msr.pub_version == 4
-        assert msr.sample_count == 296
+        assert msr.pubversion == 4
+        assert msr.samplecnt == 296
         assert msr.crc == 1977151071
-        assert msr.extra_length == 33
-        assert msr.data_length == 448
-        assert msr.extra_headers == '{"FDSN":{"Time":{"Quality":100}}}'
-#        assert msr.extra_headers(raw=True) == '{"FDSN":{"Time":{"Quality":100}}}'
-        assert msr.data_size == 1184
-        assert msr.number_samples == 296
-        assert msr.sample_type == 'i'
-        assert msr.end_time == 1267253414769539000
-        assert msr.end_time_seconds == 1267253414.769539
+        assert msr.extralength == 33
+        assert msr.datalength == 448
+        assert msr.extra == '{"FDSN":{"Time":{"Quality":100}}}'
+        assert msr.datasize == 1184
+        assert msr.numsamples == 296
+        assert msr.sampletype == 'i'
+        assert msr.endtime == 1267253414769539000
+        assert msr.endtime_seconds == 1267253414.769539
 
         # Data sample array tests
-        data = msr.data_samples
+        data = msr.datasamples
 
         # Check first 6 samples
         assert data[0:6] == [-502916, -502808, -502691, -502567, -502433, -502331]
@@ -61,7 +60,7 @@ def test_msrecord_read_record_details_fd():
         msr = msreader.read()
 
         # Data sample array tests
-        data = msr.data_samples
+        data = msr.datasamples
 
         # Check first 6 samples
         assert data[0:6] == [-502916, -502808, -502691, -502567, -502433, -502331]
@@ -77,7 +76,7 @@ def test_msrecord_read_records_summary():
 
         for msr in msreader:
             record_count += 1
-            sample_count += msr.sample_count
+            sample_count += msr.samplecnt
 
         assert record_count == 1141
         assert sample_count == 252000
