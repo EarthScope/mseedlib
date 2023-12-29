@@ -2,10 +2,10 @@ import ctypes as ct
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .exceptions import *
-from .msrecord import MSRecord
+from .msrecord import MS3Record
 
 
-class MSRecordBufferReader(MSRecord):
+class MS3RecordBufferReader():
     """Read miniSEED records from a buffer, i.e. bytearray or numpy.array
 
     The `source` object must be support the writeable buffer interface
@@ -22,6 +22,7 @@ class MSRecordBufferReader(MSRecord):
     def __init__(self, source, unpack_data=False, validate_crc=True, verbose=0):
         super().__init__()
 
+        self._msr = ct.c_void_p(None)
         self.source = source
         self.source_offset = 0
         self.parse_flags = ct.c_uint32(0)
@@ -35,7 +36,7 @@ class MSRecordBufferReader(MSRecord):
 
         self.msr3_parse = wrap_function(clibmseed, 'msr3_parse', ct.c_int,
                                                    [ct.POINTER(ct.c_char), ct.c_uint64,
-                                                    ct.POINTER(ct.POINTER(MS3Record)),
+                                                    ct.POINTER(ct.c_void_p),
                                                     ct.c_uint32, ct.c_int8])
 
     def __enter__(self):
@@ -64,12 +65,16 @@ class MSRecordBufferReader(MSRecord):
                                  self.parse_flags, self.verbose)
 
         if status == MS_NOERROR:
-            self.source_offset += self.reclen
-            return self
+            msr = ct.cast(self._msr, ct.POINTER(MS3Record)).contents
+            self.source_offset += msr.reclen
+            return msr
         elif status > 0:  # Record detected but not enough data
             return None
         else:
             raise MseedLibError(status, f'Error reading miniSEED record')
 
-    def close(self):
+    def close(self) -> None:
+        _msr3_free = wrap_function(clibmseed, 'msr3_free', None,
+                                   [ct.POINTER(ct.c_void_p)])
+        _msr3_free(ct.byref(self._msr))
         pass

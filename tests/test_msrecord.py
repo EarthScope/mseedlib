@@ -3,7 +3,7 @@ import os
 import json
 import math
 import ctypes as ct
-from mseedlib import MSRecord, DataEncoding
+from mseedlib import MS3Record, DataEncoding
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
 test_pack3 = os.path.join(test_dir, 'data', 'packtest_sine500.mseed3')
@@ -17,7 +17,7 @@ record_buffer = b''
 
 
 def record_handler(record, handler_data):
-    '''A callback function for MSRecord.set_record_handler()
+    '''A callback function for MS3Record.set_record_handler()
     Stores the record in a global buffer for testing
     '''
     print("Record handler called, record length: %d" % len(record))
@@ -27,8 +27,8 @@ def record_handler(record, handler_data):
 
 def test_msrecord_creation():
 
-    # Test populating an MSRecord object with setters
-    msr = MSRecord()
+    # Test populating an MS3Record object with setters
+    msr = MS3Record()
     msr.reclen = 512
     msr.sourceid = "FDSN:XX_TEST__B_S_X"
     msr.formatversion = 3

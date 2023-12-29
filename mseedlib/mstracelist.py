@@ -2,7 +2,7 @@ import ctypes as ct
 from typing import Any
 from .clib import clibmseed, wrap_function
 from .definitions import *
-from .msrecord import MSRecord
+from .msrecord import MS3Record
 from .util import ms_nstime2timestr, ms_encoding_sizetype
 from .exceptions import *
 
@@ -16,10 +16,10 @@ class MS3RecordPtr(ct.Structure):
                 f'byte offset: {self.fileoffset}')
 
     @property
-    def msr(self) -> MSRecord:
-        '''Return a constructed MSRecord'''
+    def msr(self) -> MS3Record:
+        '''Return a constructed MS3Record'''
         if not hasattr(self, '_msrecord'):
-            self._msrecord = MSRecord(self._msr)
+            self._msrecord = self._msr.contents
 
         return self._msrecord
 

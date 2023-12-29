@@ -6,45 +6,31 @@ from .exceptions import *
 from json import dumps as json_dumps
 
 
-class MSRecord():
-    '''A miniSEED record base class'''
+class MS3Record(ct.Structure):
+    """A miniSEED record base class based on libmseed's MS3Record structure"""
+    _fields_ = [('_record',        ct.POINTER(ct.c_char)),  # Raw miniSEED record, if available
+                ('_reclen',        ct.c_int32),   # Length of miniSEED record in bytes
+                ('_swapflag',      ct.c_uint8),   # Byte swap indicator (bitmask)
+                ('_sid',           ct.c_char * LM_SIDLEN),  # Source identifier
+                ('_formatversion', ct.c_uint8),   # Format major version
+                ('_flags',         ct.c_uint8),   # Record-level bit flags
+                ('_starttime',     ct.c_int64),   # Record start time (first sample)
+                ('_samprate',      ct.c_double),  # Nominal sample rate as samples/second (Hz) or period (s)
+                ('_encoding',      ct.c_int8),    # Data encoding format
+                ('_pubversion',    ct.c_uint8),   # Publication version
+                ('_samplecnt',     ct.c_int64),   # Number of samples in record
+                ('_crc',           ct.c_uint32),  # CRC of entire record
+                ('_extralength',   ct.c_uint16),  # Length of extra headers in bytes
+                ('_datalength',    ct.c_uint16),  # Length of data payload in bytes
+                ('_extra',         ct.c_char_p),  # Pointer to extra headers (JSON)
+                ('_datasamples',   ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
+                ('_datasize',      ct.c_size_t),  # Size of datasamples buffer in bytes
+                ('_numsamples',    ct.c_int64),   # Number of data samples in 'datasamples'
+                ('_sampletype',    ct.c_char)]    # Sample type code: t (text), i (int32) , f (float), d (double)
 
-    def __init__(self, msr_pointer=None):
+    def __init__(self):
+        super().__init__()
         self._record_handler = None
-
-        self._msr3_init = wrap_function(clibmseed, 'msr3_init', ct.POINTER(MS3Record),
-                                        [ct.POINTER(MS3Record)])
-
-        self._msr3_free = wrap_function(clibmseed, 'msr3_free', None,
-                                        [ct.POINTER(ct.POINTER(MS3Record))])
-
-        self._msr3_sampratehz = wrap_function(clibmseed, 'msr3_sampratehz', ct.c_double,
-                                              [ct.POINTER(MS3Record)])
-
-        self._msr3_print = wrap_function(clibmseed, 'msr3_print', None,
-                                         [ct.POINTER(MS3Record), ct.c_int8])
-
-        self._msr3_endtime = wrap_function(clibmseed, 'msr3_endtime', ct.c_int64,
-                                           [ct.POINTER(MS3Record)])
-
-        self._mseh_replace = wrap_function(clibmseed, 'mseh_replace', ct.c_int,
-                                           [ct.POINTER(MS3Record), ct.c_char_p])
-
-        self._msr3_pack = wrap_function(clibmseed, 'msr3_pack', ct.c_int,
-                                        [ct.POINTER(MS3Record), ct.c_void_p, ct.c_void_p,
-                                         ct.POINTER(ct.c_int64),
-                                         ct.c_uint32, ct.c_int8])
-
-        # Set pointer to MS3Record if supplied or initialize a new one
-        if msr_pointer is not None:
-            self._msr = msr_pointer
-        else:
-            self._msr = self._msr3_init(None)
-
-    def __del__(self):
-        '''Free memory allocated at the C-level for this MSRecord'''
-        self._msr3_free(ct.byref(self._msr))
-        self._msr = None
 
     def __repr__(self):
         return (f'{self.sourceid}, '
@@ -57,29 +43,29 @@ class MSRecord():
     @property
     def reclen(self):
         '''Return record length in bytes'''
-        return self._msr.contents.reclen
+        return self._reclen
 
     @reclen.setter
     def reclen(self, value):
         '''Set maximum record length in bytes'''
-        self._msr.contents.reclen = value
+        self._reclen = value
 
     @property
     def swapflag(self):
         '''Return swap flags as raw integer
 
-        Use MSRecord.swap_flag_dict() for a dictionary of decoded flags
+        Use MS3Record.swap_flag_dict() for a dictionary of decoded flags
         '''
-        return self._msr.contents.swapflag
+        return self._swapflag
 
     def swapflag_dict(self):
         '''Return swap flags as dictionary'''
         swapflag = {}
-        if self._msr.contents.swapflag & MSSWAP_HEADER.value:
+        if self._swapflag & MSSWAP_HEADER.value:
             swapflag['header_swapped'] = True
         else:
             swapflag['header_swapped'] = False
-        if self._msr.contents.swapflag & MSSWAP_PAYLOAD.value:
+        if self._swapflag & MSSWAP_PAYLOAD.value:
             swapflag['payload_swapped'] = True
         else:
             swapflag['payload_swapped'] = False
@@ -88,7 +74,7 @@ class MSRecord():
     @property
     def sourceid(self):
         '''Return source identifier as string'''
-        return self._msr.contents.sid.decode(encoding="utf-8")
+        return self._sid.decode(encoding="utf-8")
 
     @sourceid.setter
     def sourceid(self, value):
@@ -98,12 +84,12 @@ class MSRecord():
         Typicall this is an FDSN Source Identifier:
         https://docs.fdsn.org/projects/source-identifiers
         '''
-        self._msr.contents.sid = bytes(value, 'utf-8')
+        self._sid = bytes(value, 'utf-8')
 
     @property
     def formatversion(self):
         '''Return format version'''
-        return self._msr.contents.formatversion
+        return self._formatversion
 
     @formatversion.setter
     def formatversion(self, value):
@@ -111,57 +97,57 @@ class MSRecord():
         if value not in [2, 3]:
             raise ValueError(f'Invalid miniSEED format version: {value}')
 
-        self._msr.contents.formatversion = value
+        self._formatversion = value
 
     @property
     def flags(self):
         '''Return record flags as raw 8-bit integer
 
-        Use MSRecord.flags_dict() for a dictionary of decoded flags
+        Use MS3Record.flags_dict() for a dictionary of decoded flags
         '''
-        return self._msr.contents.flags
+        return self._flags
 
     @flags.setter
     def flags(self, value):
         '''Set record flags as an 8-bit unsigned integer'''
-        self._msr.contents.flags = value
+        self._flags = value
 
     def flags_dict(self):
         '''Return record flags as a dictionary'''
         flags = {}
-        if self._msr.contents.flags & ct.c_uint8(0x01).value:
+        if self._flags & ct.c_uint8(0x01).value:
             flags['calibration_signals_present'] = True
-        if self._msr.contents.flags & ct.c_uint8(0x02).value:
+        if self._flags & ct.c_uint8(0x02).value:
             flags['time_tag_is_questionable'] = True
-        if self._msr.contents.flags & ct.c_uint8(0x04).value:
+        if self._flags & ct.c_uint8(0x04).value:
             flags['clock_locked'] = True
         return flags
 
     @property
     def starttime(self):
         '''Return start time as nanoseconds since Unix/POSIX epoch'''
-        return self._msr.contents.starttime
+        return self._starttime
 
     @starttime.setter
     def starttime(self, value):
         '''Set start time as nanoseconds since Unix/POSIX epoch'''
-        self._msr.contents.starttime = value
+        self._starttime = value
 
     @property
     def starttime_seconds(self):
         '''Return start time as seconds since Unix/POSIX epoch'''
-        return self._msr.contents.starttime / NSTMODULUS
+        return self._starttime / NSTMODULUS
 
     @starttime_seconds.setter
     def starttime_seconds(self, value):
         '''Set start time as seconds since Unix/POSIX epoch'''
-        self._msr.contents.starttime = value * NSTMODULUS
+        self._starttime = value * NSTMODULUS
 
     def starttime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE):
         '''Return start time as formatted string'''
         c_timestr = ct.create_string_buffer(32)
 
-        ms_nstime2timestr(self._msr.contents.starttime, c_timestr, timeformat, subsecond)
+        ms_nstime2timestr(self._starttime, c_timestr, timeformat, subsecond)
 
         return str(c_timestr.value, 'utf-8')
 
@@ -175,7 +161,7 @@ class MSRecord():
     @property
     def samprate(self):
         '''Return sample rate value as samples per second'''
-        return self._msr3_sampratehz(self._msr)
+        return _msr3_sampratehz(ct.byref(self))
 
     @samprate.setter
     def samprate(self, value):
@@ -189,22 +175,22 @@ class MSRecord():
         Set to 0.0 if no time series data are included in the record, e.g. header-only
         record or text payload.
         '''
-        self._msr.contents.samprate = value
+        self._samprate = value
 
     @property
     def samprate_raw(self):
         '''Return raw sample rate value
 
         This value represents samples per second when positive and sample interval
-        in seconds when negative.  Use MSRecord.samprate() for a consistent value in samples
+        in seconds when negative.  Use MSsRecord.samprate() for a consistent value in samples
         per second.
         '''
-        return self._msr.contents.samprate
+        return self._samprate
 
     @property
     def encoding(self):
-        '''Return encoding format code.  Use MSRecord.encoding_str() for a readable description'''
-        return self._msr.contents.encoding
+        '''Return encoding format code.  Use MS3Record.encoding_str() for a readable description'''
+        return self._encoding
 
     @encoding.setter
     def encoding(self, value):
@@ -212,71 +198,71 @@ class MSRecord():
 
         See https://docs.fdsn.org/projects/miniseed3/en/latest/data-encodings.html
         '''
-        self._msr.contents.encoding = value
+        self._encoding = value
 
     @property
     def pubversion(self):
         '''Return publication version'''
-        return self._msr.contents.pubversion
+        return self._pubversion
 
     @pubversion.setter
     def pubversion(self, value):
         '''Set publication version'''
-        self._msr.contents.pubversion = value
+        self._pubversion = value
 
     @property
     def samplecnt(self):
         '''Return sample count'''
-        return self._msr.contents.samplecnt
+        return self._samplecnt
 
     @property
     def crc(self):
         '''Return CRC-32C from record header'''
-        return self._msr.contents.crc
+        return self._crc
 
     @property
     def extralength(self):
         '''Return length of extra headers'''
-        return self._msr.contents.extralength
+        return self._extralength
 
     @property
     def datalength(self):
         '''Return length of encoded data payload in bytes'''
-        return self._msr.contents.datalength
+        return self._datalength
 
     @property
     def extra(self):
         '''Return extra headers as string
 
-        This is a JSON string, decodable to a dictionary with `json.loads(MSRecord.extra)`
+        This is a JSON string, decodable to a dictionary with `json.loads(MS3Record.extra)`
         '''
-        return self._msr.contents.extra.decode(encoding='utf-8')
+        return self._extra.decode(encoding='utf-8')
 
     @extra.setter
     def extra(self, value):
         '''Set extra headers to specified JSON string'''
-        status = self._mseh_replace(self._msr, value.encode(encoding='utf-8') if value is not None else None)
+        status = _mseh_replace(ct.byref(self), value.encode(encoding='utf-8') if value is not None else None)
 
         if status < 0:
             raise MseedLibError(status, f'Error replacing extra headers')
 
     @property
     def datasamples(self):
-        '''Return data samples as a ctype array of type `MSRecord.sampletype`
+        '''Return data samples as a ctype array of type `MS3Record.sampletype`
 
         The returned array can be used directly with slicing and indexing
-        from `0` to `MSRecord.numsamples - 1`.
+        from `0` to `MS3Record.numsamples - 1`.
 
         The array can efficiently be copied to a _python list_ using:
 
-            data_samples = MSRecord.datasamples[:]
+            data_samples = MS3Record.datasamples[:]
 
         The array can efficiently be copied to a _numpy array_ using:
 
             # Translate libmseed sample type to numpy type
             nptype = {'i': numpy.int32, 'f': numpy.float32, 'd': numpy.float64, 't': numpy.char}
 
-            numpy.frombuffer(MSRecord.datasamples, dtype=nptype[MSRecord.sampletype])
+            numpy.frombuffer(MS3Record.datasamples, dtype=nptype[MS3Record.sampletype])
 
         *NOTE* These data are owned by the this object instance and will be freed
         when the instance is destroyed.  If you wish to keep the data, you must
@@ -286,16 +272,16 @@ class MSRecord():
             raise ValueError("No decoded samples available")
 
         if self.sampletype == 'i':
-            return ct.cast(self._msr.contents.datasamples,
+            return ct.cast(self._datasamples,
                            ct.POINTER(ct.c_int32 * self.numsamples)).contents
         elif self.sampletype == 'f':
-            return ct.cast(self._msr.contents.datasamples,
+            return ct.cast(self._datasamples,
                            ct.POINTER(ct.c_float * self.numsamples)).contents
         elif self.sampletype == 'd':
-            return ct.cast(self._msr.contents.datasamples,
+            return ct.cast(self._datasamples,
                            ct.POINTER(ct.c_double * self.numsamples)).contents
         elif self.sampletype == 't':
-            return ct.cast(self._msr.contents.datasamples,
+            return ct.cast(self._datasamples,
                            ct.POINTER(ct.c_char * self.numsamples)).contents
         else:
             raise ValueError(f"Unknown sample type: {self.sampletype}")
@@ -303,27 +289,27 @@ class MSRecord():
     @property
     def datasize(self):
         '''Return size of decoded data payload in bytes'''
-        return self._msr.contents.datasize
+        return self._datasize
 
     @property
     def numsamples(self):
-        '''Return number of decoded samples at MSRecord.datasamples'''
-        return self._msr.contents.numsamples
+        '''Return number of decoded samples at MS3Record.datasamples'''
+        return self._numsamples
 
     @property
     def sampletype(self):
         '''Return sample type code'''
-        return self._msr.contents.sampletype.decode(encoding='utf-8')
+        return self._sampletype.decode(encoding='utf-8')
 
     @property
     def endtime(self):
         '''Return end time as nanoseconds since Unix/POSIX epoch'''
-        return self._msr3_endtime(self._msr)
+        return _msr3_endtime(ct.byref(self))
 
     @property
     def endtime_seconds(self):
         '''Return end time as seconds since Unix/POSIX epoch'''
-        return self._msr3_endtime(self._msr) / NSTMODULUS
+        return _msr3_endtime(ct.byref(self)) / NSTMODULUS
 
     def endtime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE):
         '''Return start time as formatted string'''
@@ -335,19 +321,19 @@ class MSRecord():
 
     def encoding_str(self):
         '''Return encoding format as descriptive string'''
-        return ms_encodingstr(self._msr.contents.encoding).decode('utf-8')
+        return ms_encodingstr(self._encoding).decode('utf-8')
 
     def print(self, details=0):
         '''Print details of the record to stdout, with varying levels of `details`'''
-        self._msr3_print(self._msr, details)
+        _msr3_print(ct.byref(self), details)
 
     def set_record_handler(self, record_handler, handler_data=None):
-        '''Set the record handler function and data called by MSRecord.pack()
+        '''Set the record handler function and data called by MS3Record.pack()
 
         The record_handler(record, handler_data) function must accept two arguments:
 
                 record:         A buffer containing a miniSEED record
-                handler_data:   The handler_data object passed to MSRecord.set_record_handler()
+                handler_data:   The handler_data object passed to MS3Record.set_record_handler()
 
         The function must use or copy the record buffer as the memory may be reused
         on subsequent iterations.
@@ -372,11 +358,11 @@ class MSRecord():
     def pack(self, datasamples=None, sampletype=None, flush_data=True, verbose=0) -> (int, int):
         '''Pack `datasamples` into miniSEED record(s) and call `MSRecrod.record_handler()`
 
-        The record_handler() function must be registered with MSRecord.set_record_handler().
+        The record_handler() function must be registered with MS3Record.set_record_handler().
 
         If `datasamples` is not None, it must be a sequence of samples that can be
-        packed into the type specified by `sampletype` and appropriate for MSRecord.encoding.
-        If `datasamples` is None, any samples associated with the MSRecord will be packed.
+        packed into the type specified by `sampletype` and appropriate for MS3Record.encoding.
+        If `datasamples` is None, any samples associated with the MS3Record will be packed.
 
         If `flush_data` is True, all data samples will be packed.  In the case of miniSEED
         format version 2, this will likely create an unfilled final record.
@@ -389,7 +375,7 @@ class MSRecord():
         '''
 
         if self._record_handler is None:
-            raise ValueError('No record handler function registered, see MSRecord.set_record_handler()')
+            raise ValueError('No record handler function registered, see MS3Record.set_record_handler()')
 
         pack_flags = ct.c_uint32(0)
         packed_samples = ct.c_int64(0)
@@ -398,10 +384,10 @@ class MSRecord():
             pack_flags.value |= MSF_FLUSHDATA.value
 
         if datasamples is not None:
-            msr_datasamples = self._msr.contents.datasamples
-            msr_sampletype = self._msr.contents.sampletype
-            msr_numsamples = self._msr.contents.numsamples
-            msr_samplecnt = self._msr.contents.samplecnt
+            msr_datasamples = self._datasamples
+            msr_sampletype = self._sampletype
+            msr_numsamples = self._numsamples
+            msr_samplecnt = self._samplecnt
 
             len_datasamples = len(datasamples)
 
@@ -416,22 +402,41 @@ class MSRecord():
             else:
                 raise ValueError(f"Unknown sample type: {sampletype}")
 
-            self._msr.contents.datasamples = ct.cast(ct.byref(ctypes_data), ct.c_void_p)
-            self._msr.contents.sampletype = bytes(sampletype, 'utf-8')
-            self._msr.contents.numsamples = len_datasamples
-            self._msr.contents.samplecnt = len_datasamples
+            self._datasamples = ct.cast(ct.byref(ctypes_data), ct.c_void_p)
+            self._sampletype = bytes(sampletype, 'utf-8')
+            self._numsamples = len_datasamples
+            self._samplecnt = len_datasamples
 
-        packed_records = self._msr3_pack(self._msr, self._ctypes_record_handler, None,
-                                         ct.byref(packed_samples), pack_flags, verbose)
+        packed_records = _msr3_pack(ct.byref(self), self._ctypes_record_handler, None,
+                                    ct.byref(packed_samples), pack_flags, verbose)
 
         # Restore the original datasamples, stampletype, numsamples, samplecnt
         if datasamples is not None:
-            self._msr.contents.datasamples = msr_datasamples
-            self._msr.contents.sampletype = msr_sampletype
-            self._msr.contents.numsamples = msr_numsamples
-            self._msr.contents.samplecnt = msr_samplecnt
+            self._datasamples = msr_datasamples
+            self._sampletype = msr_sampletype
+            self._numsamples = msr_numsamples
+            self._samplecnt = msr_samplecnt
 
         if packed_records < 0:
             raise MseedLibError(packed_records, f'Error packing miniSEED record(s)')
 
         return (packed_samples.value, packed_records)
+
+
+# Module-level C-function wrappers
+_msr3_sampratehz = wrap_function(clibmseed, 'msr3_sampratehz', ct.c_double,
+                                 [ct.POINTER(MS3Record)])
+
+_msr3_print = wrap_function(clibmseed, 'msr3_print', None,
+                            [ct.POINTER(MS3Record), ct.c_int8])
+
+_msr3_endtime = wrap_function(clibmseed, 'msr3_endtime', ct.c_int64,
+                              [ct.POINTER(MS3Record)])
+
+_mseh_replace = wrap_function(clibmseed, 'mseh_replace', ct.c_int,
+                              [ct.POINTER(MS3Record), ct.c_char_p])
+
+_msr3_pack = wrap_function(clibmseed, 'msr3_pack', ct.c_int,
+                           [ct.POINTER(MS3Record), ct.c_void_p, ct.c_void_p,
+                            ct.POINTER(ct.c_int64),
+                            ct.c_uint32, ct.c_int8])

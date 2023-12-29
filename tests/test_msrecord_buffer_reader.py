@@ -1,6 +1,6 @@
 import pytest
 import os
-from mseedlib import MSRecordBufferReader, TimeFormat, SubSecond
+from mseedlib import MS3RecordBufferReader, TimeFormat, SubSecond
 from mseedlib.exceptions import MseedLibError
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
@@ -13,7 +13,7 @@ def test_msrecord_read_buffer_details():
     with open(test_path3, 'rb') as fp:
         buffer = bytearray(fp.read())
 
-        with MSRecordBufferReader(buffer, unpack_data=True) as msreader:
+        with MS3RecordBufferReader(buffer, unpack_data=True) as msreader:
 
             # Read first record
             msr = msreader.read()
@@ -61,7 +61,7 @@ def test_msrecord_read_buffer_summary():
     with open(test_path2, 'rb') as fp:
         buffer = bytearray(fp.read())
 
-        with MSRecordBufferReader(buffer) as msreader:
+        with MS3RecordBufferReader(buffer) as msreader:
 
             record_count = 0
             sample_count = 0

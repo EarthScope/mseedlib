@@ -80,26 +80,3 @@ class SubSecond(ctypesEnum):
     NANO_NONE = 4  # Nanosecond resolution if subseconds are non-zero, otherwise no subseconds
     NANO_MICRO = 5  # Nanosecond resolution if there are sub-microseconds, otherwise microseconds resolution
     NANO_MICRO_NONE = 6  # Nanosecond resolution if present, microsecond if present, otherwise no subseconds
-
-
-class MS3Record(ct.Structure):
-    """Structure to hold a miniSEED record"""
-    _fields_ = [('record',        ct.POINTER(ct.c_char)),  # Raw miniSEED record, if available
-                ('reclen',        ct.c_int32),   # Length of miniSEED record in bytes
-                ('swapflag',      ct.c_uint8),   # Byte swap indicator (bitmask)
-                ('sid',           ct.c_char * LM_SIDLEN),  # Source identifier
-                ('formatversion', ct.c_uint8),   # Format major version
-                ('flags',         ct.c_uint8),   # Record-level bit flags
-                ('starttime',     ct.c_int64),   # Record start time (first sample)
-                ('samprate',      ct.c_double),  # Nominal sample rate as samples/second (Hz) or period (s)
-                ('encoding',      ct.c_int8),    # Data encoding format
-                ('pubversion',    ct.c_uint8),   # Publication version
-                ('samplecnt',     ct.c_int64),   # Number of samples in record
-                ('crc',           ct.c_uint32),  # CRC of entire record
-                ('extralength',   ct.c_uint16),  # Length of extra headers in bytes
-                ('datalength',    ct.c_uint16),  # Length of data payload in bytes
-                ('extra',         ct.c_char_p),  # Pointer to extra headers (JSON)
-                ('datasamples',   ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
-                ('datasize',      ct.c_size_t),  # Size of datasamples buffer in bytes
-                ('numsamples',    ct.c_int64),   # Number of data samples in 'datasamples'
-                ('sampletype',    ct.c_char)]    # Sample type code: t (text), i (int32) , f (float), d (double)

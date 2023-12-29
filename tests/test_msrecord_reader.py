@@ -1,6 +1,6 @@
 import pytest
 import os
-from mseedlib import MSRecordReader, TimeFormat, SubSecond
+from mseedlib import MS3RecordReader, TimeFormat, SubSecond
 from mseedlib.exceptions import MseedLibError
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
@@ -8,7 +8,7 @@ test_path3 = os.path.join(test_dir, 'data', 'testdata-COLA-signal.mseed3')
 test_path2 = os.path.join(test_dir, 'data', 'testdata-COLA-signal.mseed2')
 
 def test_msrecord_read_record_details():
-    with MSRecordReader(test_path3, unpack_data=True) as msreader:
+    with MS3RecordReader(test_path3, unpack_data=True) as msreader:
 
         # Read first record
         msr = msreader.read()
@@ -55,7 +55,7 @@ def test_msrecord_read_record_details_fd():
     fp = open(test_path2, 'rb', buffering=0)
 
     # Provide the reader with the file descriptor
-    with MSRecordReader(fp.fileno(), unpack_data=True) as msreader:
+    with MS3RecordReader(fp.fileno(), unpack_data=True) as msreader:
         # Read first record
         msr = msreader.read()
 
@@ -69,7 +69,7 @@ def test_msrecord_read_record_details_fd():
         assert data[-6:] == [-508722, -508764, -508809, -508866, -508927, -508986]
 
 def test_msrecord_read_records_summary():
-    with MSRecordReader(test_path2) as msreader:
+    with MS3RecordReader(test_path2) as msreader:
 
         record_count = 0
         sample_count = 0
@@ -83,5 +83,5 @@ def test_msrecord_read_records_summary():
 
 def test_msrecord_nosuchfile():
     with pytest.raises(MseedLibError):
-        with MSRecordReader("NOSUCHFILE") as msreader:
+        with MS3RecordReader("NOSUCHFILE") as msreader:
             msr = msreader.read()
