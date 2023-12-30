@@ -341,8 +341,6 @@ class MSTraceList():
         self._selections = ct.c_void_p()
         self._filenames = []
 
-        self._msfp = ct.POINTER(ct.c_void_p)()  # Creates a NULL pointer, testable as boolean False
-
         self._mstl3_init = wrap_function(clibmseed, 'mstl3_init', ct.POINTER(MS3TraceList),
                                          [ct.POINTER(MS3TraceList)])
 
@@ -387,7 +385,7 @@ class MSTraceList():
     def numtraceids(self) -> int:
         return self._mstl.contents.numtraceids
 
-    def traceid(self, sourceid, version=0) -> MS3TraceID:
+    def get_traceid(self, sourceid, version=0) -> MS3TraceID:
         '''Return the requested trace ID structure'''
         traceid = self._mstl3_findID(self._mstl, bytes(sourceid, 'utf-8'), ct.c_uint8(version), None)
 
@@ -420,7 +418,7 @@ class MSTraceList():
         self._mstl3_printtracelist(self._mstl, timeformat, _details, _gaps, _versions)
 
     def readFile(self, file_name, unpack_data=False, record_list=False,
-                 skip_not_data=False, validate_crc=True, split_version=False, verbose=0) -> int:
+                 skip_not_data=False, validate_crc=True, split_version=False, verbose=0) -> MS3TraceList:
         '''Read a miniSEED file into the trace list
         '''
         # Store list of files names for reference and use in record lists
