@@ -144,11 +144,6 @@ class MS3TraceSeg(ct.Structure):
         '''Return sample type code'''
         if self._sampletype != b'\x00':
             return self._sampletype.decode(encoding='utf-8')
-        elif self.recordlist:
-            # Get encoding from first record in list and determine sample type
-            # int ms_encoding_sizetype (uint8_t encoding, uint8_t *samplesize, char *sampletype);
-            # return self.recordlist._first.contents.msr.sampletype
-            return self._sampletype.decode(encoding='utf-8')
         else:
             raise ValueError("No sample type available")
 
