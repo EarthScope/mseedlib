@@ -1,6 +1,6 @@
 import pytest
 import os
-from mseedlib import MS3RecordBufferReader, TimeFormat, SubSecond
+from mseedlib import MS3RecordBufferReader, DataEncoding, TimeFormat, SubSecond
 from mseedlib.exceptions import MseedLibError
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
@@ -32,7 +32,7 @@ def test_msrecord_read_buffer_details():
                                       subsecond=SubSecond.NONE) == '2010,058,06:50:00'
             assert msr.samprate == 20.0
             assert msr.samprate_raw == 20.0
-            assert msr.encoding == 11
+            assert msr.encoding == DataEncoding.STEIM2
             assert msr.encoding_str() == 'STEIM-2 integer compression'
             assert msr.pubversion == 4
             assert msr.samplecnt == 296

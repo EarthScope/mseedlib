@@ -25,7 +25,7 @@ def record_handler(record, handler_data):
     record_buffer = bytes(record)
 
 
-def test_msrecord_creation():
+def test_msrecord_pack():
 
     # Test populating an MS3Record object with setters
     msr = MS3Record()
@@ -35,7 +35,7 @@ def test_msrecord_creation():
     msr.flags = ct.c_uint8(0x04).value  # Set the 4th bit (clock locked) to 1
     msr.set_starttime_str("2023-01-02T01:02:03.123456789Z")
     msr.samprate = 50.0
-    msr.encoding = DataEncoding.STEIM2  # value of 10
+    msr.encoding = DataEncoding.STEIM2  # value of 11
     msr.pubversion = 1
     msr.extra = json.dumps({"FDSN": {"Time": {"Quality": 80}}})
 
@@ -46,7 +46,7 @@ def test_msrecord_creation():
     assert msr.starttime == 1672621323123456789
     assert msr.starttime_seconds == 1672621323.1234567
     assert msr.samprate == 50.0
-    assert msr.encoding == 11
+    assert msr.encoding == DataEncoding.STEIM2
     assert msr.pubversion == 1
     assert msr.extra == '{"FDSN":{"Time":{"Quality":80}}}'
 

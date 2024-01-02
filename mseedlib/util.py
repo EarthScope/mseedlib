@@ -24,8 +24,33 @@ ms_nslc2sid = wrap_function(clibmseed, 'ms_nslc2sid', ct.c_int,
                             [ct.c_char_p, ct.c_int, ct.c_uint16,
                              ct.c_char_p, ct.c_char_p, ct.c_char_p, ct.c_char_p])
 
+ms_sampletime = wrap_function(clibmseed, 'ms_sampletime', ct.c_int64,
+                              [ct.c_int64, ct.c_int64, ct.c_double])
 
-def sourceid2nslc(sourceid):
+
+def nstime2timestr(nstime: int,
+                   timeformat=TimeFormat.ISOMONTHDAY_Z,
+                   subsecond=SubSecond.NANO_MICRO_NONE):
+    """Convert a nanosecond timestamp to a date-time string"""
+    c_timestr = ct.create_string_buffer(40)
+
+    status = ms_nstime2timestr(nstime, c_timestr, timeformat, subsecond)
+
+    if status is not None:
+        return str(c_timestr.value, 'utf-8')
+    else:
+        raise ValueError(f"Error converting timestamp: {nstime}")
+
+def timestr2nstime(timestr: str) -> int:
+    """Convert a date-time string to a nanosecond timestamp"""
+    status = ms_timestr2nstime(timestr.encode())
+
+    if status != NSTERROR:
+        return status
+    else:
+        raise ValueError(f"Error converting date-time string: {timestr}")
+
+def sourceid2nslc(sourceid: str) -> tuple:
     """Convert an FDSN source ID to a tuple of (net, sta, loc, chan)"""
     net = ct.create_string_buffer(11)
     sta = ct.create_string_buffer(11)
@@ -40,7 +65,7 @@ def sourceid2nslc(sourceid):
         raise ValueError("Invalid source ID: %s" % sourceid)
 
 
-def nslc2sourceid(net, sta=None, loc=None, chan=None):
+def nslc2sourceid(net: str, sta: str = None, loc: str = None, chan: str = None) -> str:
     """Convert network, station, location, channel codes to an FDSN source ID"""
     sourceid = ct.create_string_buffer(LM_SIDLEN)
 
@@ -54,3 +79,7 @@ def nslc2sourceid(net, sta=None, loc=None, chan=None):
         return sourceid.value.decode()
     else:
         raise ValueError("Invalid NSLC: %s,%s,%s,%s" % (net, sta, loc, chan))
+
+def sampletime(nstime: int, offset: int, samprate: float) -> int:
+    """Calculate nanosecond timestamp of a sample offset from a start time"""
+    return ms_sampletime(nstime, offset, samprate)

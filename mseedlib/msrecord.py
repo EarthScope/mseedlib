@@ -3,7 +3,6 @@ from .clib import clibmseed, wrap_function
 from .definitions import *
 from .util import ms_nstime2timestr, ms_timestr2nstime, ms_encodingstr
 from .exceptions import *
-from json import dumps as json_dumps
 
 
 class MS3Record(ct.Structure):
@@ -32,7 +31,7 @@ class MS3Record(ct.Structure):
         super().__init__()
         self._record_handler = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f'{self.sourceid}, '
                 f'{self.pubversion}, '
                 f'{self.reclen}, '
@@ -41,24 +40,24 @@ class MS3Record(ct.Structure):
                 f'{self.starttime_str()}')
 
     @property
-    def reclen(self):
+    def reclen(self) -> int:
         '''Return record length in bytes'''
         return self._reclen
 
     @reclen.setter
-    def reclen(self, value):
+    def reclen(self, value) -> None:
         '''Set maximum record length in bytes'''
         self._reclen = value
 
     @property
-    def swapflag(self):
+    def swapflag(self) -> int:
         '''Return swap flags as raw integer
 
         Use MS3Record.swap_flag_dict() for a dictionary of decoded flags
         '''
         return self._swapflag
 
-    def swapflag_dict(self):
+    def swapflag_dict(self) -> dict:
         '''Return swap flags as dictionary'''
         swapflag = {}
         if self._swapflag & MSSWAP_HEADER.value:
@@ -72,12 +71,12 @@ class MS3Record(ct.Structure):
         return swapflag
 
     @property
-    def sourceid(self):
+    def sourceid(self) -> str:
         '''Return source identifier as string'''
         return self._sid.decode(encoding="utf-8")
 
     @sourceid.setter
-    def sourceid(self, value):
+    def sourceid(self, value) -> None:
         '''Set source identifier
 
         The source identifier is limited to 64 characters.
@@ -87,12 +86,12 @@ class MS3Record(ct.Structure):
         self._sid = bytes(value, 'utf-8')
 
     @property
-    def formatversion(self):
+    def formatversion(self) -> int:
         '''Return format version'''
         return self._formatversion
 
     @formatversion.setter
-    def formatversion(self, value):
+    def formatversion(self, value) -> None:
         '''Set format version'''
         if value not in [2, 3]:
             raise ValueError(f'Invalid miniSEED format version: {value}')
@@ -100,7 +99,7 @@ class MS3Record(ct.Structure):
         self._formatversion = value
 
     @property
-    def flags(self):
+    def flags(self) -> int:
         '''Return record flags as raw 8-bit integer
 
         Use MS3Record.flags_dict() for a dictionary of decoded flags
@@ -108,11 +107,11 @@ class MS3Record(ct.Structure):
         return self._flags
 
     @flags.setter
-    def flags(self, value):
+    def flags(self, value) -> None:
         '''Set record flags as an 8-bit unsigned integer'''
         self._flags = value
 
-    def flags_dict(self):
+    def flags_dict(self) -> dict:
         '''Return record flags as a dictionary'''
         flags = {}
         if self._flags & ct.c_uint8(0x01).value:
@@ -124,34 +123,39 @@ class MS3Record(ct.Structure):
         return flags
 
     @property
-    def starttime(self):
+    def starttime(self) -> int:
         '''Return start time as nanoseconds since Unix/POSIX epoch'''
         return self._starttime
 
     @starttime.setter
-    def starttime(self, value):
+    def starttime(self, value) -> None:
         '''Set start time as nanoseconds since Unix/POSIX epoch'''
         self._starttime = value
 
     @property
-    def starttime_seconds(self):
+    def starttime_seconds(self) -> float:
         '''Return start time as seconds since Unix/POSIX epoch'''
         return self._starttime / NSTMODULUS
 
     @starttime_seconds.setter
-    def starttime_seconds(self, value):
-        '''Set start time as seconds since Unix/POSIX epoch'''
-        self._starttime = value * NSTMODULUS
+    def starttime_seconds(self, value) -> None:
+        '''Set start time as seconds since Unix/POSIX epoch
 
-    def starttime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE):
+        The value is limited to microsecond resolution and will be rounded
+        to to ensure a consistent conversion to the internal representation.
+        '''
+        # Scale to microseconds, round to nearest integer, then scale to nanoseconds
+        self._starttime = int(value * 1000000 + 0.5) * 1000
+
+    def starttime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
         '''Return start time as formatted string'''
-        c_timestr = ct.create_string_buffer(32)
+        c_timestr = ct.create_string_buffer(40)
 
         ms_nstime2timestr(self._starttime, c_timestr, timeformat, subsecond)
 
         return str(c_timestr.value, 'utf-8')
 
-    def set_starttime_str(self, value):
+    def set_starttime_str(self, value) -> None:
         '''Set the start time using the specified provided date-time string'''
         self.starttime = ms_timestr2nstime(bytes(value, 'utf-8'))
 
@@ -159,12 +163,12 @@ class MS3Record(ct.Structure):
             raise ValueError(f'Invalid start time string: {value}')
 
     @property
-    def samprate(self):
+    def samprate(self) -> float:
         '''Return sample rate value as samples per second'''
         return _msr3_sampratehz(ct.byref(self))
 
     @samprate.setter
-    def samprate(self, value):
+    def samprate(self, value) -> None:
         '''Set sample rate
 
         When the value is positive it represents the rate in samples per second,
@@ -178,7 +182,7 @@ class MS3Record(ct.Structure):
         self._samprate = value
 
     @property
-    def samprate_raw(self):
+    def samprate_raw(self) -> float:
         '''Return raw sample rate value
 
         This value represents samples per second when positive and sample interval
@@ -188,12 +192,12 @@ class MS3Record(ct.Structure):
         return self._samprate
 
     @property
-    def encoding(self):
+    def encoding(self) -> int:
         '''Return encoding format code.  Use MS3Record.encoding_str() for a readable description'''
         return self._encoding
 
     @encoding.setter
-    def encoding(self, value):
+    def encoding(self, value) -> None:
         '''Set encoding format code
 
         See https://docs.fdsn.org/projects/miniseed3/en/latest/data-encodings.html
@@ -201,37 +205,37 @@ class MS3Record(ct.Structure):
         self._encoding = value
 
     @property
-    def pubversion(self):
+    def pubversion(self) -> int:
         '''Return publication version'''
         return self._pubversion
 
     @pubversion.setter
-    def pubversion(self, value):
+    def pubversion(self, value) -> None:
         '''Set publication version'''
         self._pubversion = value
 
     @property
-    def samplecnt(self):
+    def samplecnt(self) -> int:
         '''Return sample count'''
         return self._samplecnt
 
     @property
-    def crc(self):
+    def crc(self) -> int:
         '''Return CRC-32C from record header'''
         return self._crc
 
     @property
-    def extralength(self):
+    def extralength(self) -> int:
         '''Return length of extra headers'''
         return self._extralength
 
     @property
-    def datalength(self):
+    def datalength(self) -> int:
         '''Return length of encoded data payload in bytes'''
         return self._datalength
 
     @property
-    def extra(self):
+    def extra(self) -> str:
         '''Return extra headers as string
 
         This is a JSON string, decodable to a dictionary with `json.loads(MS3Record.extra)`
@@ -239,7 +243,7 @@ class MS3Record(ct.Structure):
         return self._extra.decode(encoding='utf-8')
 
     @extra.setter
-    def extra(self, value):
+    def extra(self, value) -> None:
         '''Set extra headers to specified JSON string'''
         status = _mseh_replace(ct.byref(self), value.encode(encoding='utf-8') if value is not None else None)
 
@@ -287,47 +291,47 @@ class MS3Record(ct.Structure):
             raise ValueError(f"Unknown sample type: {self.sampletype}")
 
     @property
-    def datasize(self):
+    def datasize(self) -> int:
         '''Return size of decoded data payload in bytes'''
         return self._datasize
 
     @property
-    def numsamples(self):
+    def numsamples(self) -> int:
         '''Return number of decoded samples at MS3Record.datasamples'''
         return self._numsamples
 
     @property
-    def sampletype(self):
+    def sampletype(self) -> str:
         '''Return sample type code'''
         return self._sampletype.decode(encoding='utf-8')
 
     @property
-    def endtime(self):
+    def endtime(self) -> int:
         '''Return end time as nanoseconds since Unix/POSIX epoch'''
         return _msr3_endtime(ct.byref(self))
 
     @property
-    def endtime_seconds(self):
+    def endtime_seconds(self) -> float:
         '''Return end time as seconds since Unix/POSIX epoch'''
         return _msr3_endtime(ct.byref(self)) / NSTMODULUS
 
-    def endtime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE):
+    def endtime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
         '''Return start time as formatted string'''
-        c_timestr = ct.create_string_buffer(32)
+        c_timestr = ct.create_string_buffer(40)
 
         ms_nstime2timestr(self.endtime, c_timestr, timeformat, subsecond)
 
         return str(c_timestr.value, 'utf-8')
 
-    def encoding_str(self):
+    def encoding_str(self) -> str:
         '''Return encoding format as descriptive string'''
         return ms_encodingstr(self._encoding).decode('utf-8')
 
-    def print(self, details=0):
+    def print(self, details=0) -> None:
         '''Print details of the record to stdout, with varying levels of `details`'''
         _msr3_print(ct.byref(self), details)
 
-    def set_record_handler(self, record_handler, handler_data=None):
+    def set_record_handler(self, record_handler, handler_data=None) -> None:
         '''Set the record handler function and data called by MS3Record.pack()
 
         The record_handler(record, handler_data) function must accept two arguments:
@@ -345,7 +349,7 @@ class MS3Record(ct.Structure):
         RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
         self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
 
-    def _record_handler_wrapper(self, record, record_length, handlerdata):
+    def _record_handler_wrapper(self, record, record_length, handlerdata) -> None:
         '''Callback function for msr3_pack()
 
         The `handlerdata` argument is purposely unused, as handler data is passed
@@ -356,9 +360,10 @@ class MS3Record(ct.Structure):
                              self._record_handler_data)
 
     def pack(self, datasamples=None, sampletype=None, flush_data=True, verbose=0) -> (int, int):
-        '''Pack `datasamples` into miniSEED record(s) and call `MSRecrod.record_handler()`
+        '''Pack `datasamples` into miniSEED record(s) and call `MSRecord.record_handler()`
 
-        The record_handler() function must be registered with MS3Record.set_record_handler().
+        The record_handler() callback function must be registered with
+        MS3Record.set_record_handler().
 
         If `datasamples` is not None, it must be a sequence of samples that can be
         packed into the type specified by `sampletype` and appropriate for MS3Record.encoding.

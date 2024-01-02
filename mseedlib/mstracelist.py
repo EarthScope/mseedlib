@@ -73,7 +73,7 @@ class MS3TraceSeg(ct.Structure):
         return self.starttime / NSTMODULUS
 
     def starttime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
-        c_timestr = ct.create_string_buffer(32)
+        c_timestr = ct.create_string_buffer(40)
 
         ms_nstime2timestr(self.starttime, c_timestr, timeformat, subsecond)
 
@@ -85,7 +85,7 @@ class MS3TraceSeg(ct.Structure):
         return self.endtime / NSTMODULUS
 
     def endtime_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
-        c_timestr = ct.create_string_buffer(32)
+        c_timestr = ct.create_string_buffer(40)
 
         ms_nstime2timestr(self.endtime, c_timestr, timeformat, subsecond)
 
@@ -237,7 +237,7 @@ class MS3TraceID(ct.Structure):
         return self.earliest / NSTMODULUS
 
     def earliest_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
-        c_timestr = ct.create_string_buffer(32)
+        c_timestr = ct.create_string_buffer(40)
 
         ms_nstime2timestr(self.earliest, c_timestr, timeformat, subsecond)
 
@@ -249,7 +249,7 @@ class MS3TraceID(ct.Structure):
         return self.latest / NSTMODULUS
 
     def latest_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
-        c_timestr = ct.create_string_buffer(32)
+        c_timestr = ct.create_string_buffer(40)
 
         ms_nstime2timestr(self.latest, c_timestr, timeformat, subsecond)
 
@@ -266,11 +266,6 @@ MS3TraceID._fields_ = [('sid',         ct.c_char * LM_SIDLEN),  # Source identif
                        ('_last',       ct.POINTER(MS3TraceSeg)),  # Pointer to last of list of segments
                        ('_next',       ct.POINTER(MS3TraceID) * MSTRACEID_SKIPLIST_HEIGHT),
                        ('_height',     ct.c_uint8)]    # Height of skip list at 'next'
-
-# Define this module-level function now that strctures are defined
-_mstl3_unpack_recordlist = wrap_function(clibmseed, 'mstl3_unpack_recordlist', ct.c_int64,
-                                         [ct.POINTER(MS3TraceID), ct.POINTER(MS3TraceSeg),
-                                          ct.c_void_p, ct.c_size_t, ct.c_int8])
 
 
 class MS3TraceList(ct.Structure):
@@ -335,32 +330,16 @@ class MSTraceList():
         self._tolerance = ct.c_void_p()
         self._selections = ct.c_void_p()
         self._filenames = []
-
-        self._mstl3_init = wrap_function(clibmseed, 'mstl3_init', ct.POINTER(MS3TraceList),
-                                         [ct.POINTER(MS3TraceList)])
-
-        self._mstl3_free = wrap_function(clibmseed, 'mstl3_free', None,
-                                         [ct.POINTER(ct.POINTER(MS3TraceList)), ct.c_int8])
-
-        self._mstl3_findID = wrap_function(clibmseed, 'mstl3_findID', ct.POINTER(MS3TraceID),
-                                           [ct.POINTER(MS3TraceList), ct.c_char_p, ct.c_uint8, ct.c_void_p])
-
-        self._mstl3_printtracelist = wrap_function(clibmseed, 'mstl3_printtracelist', None,
-                                                   [ct.POINTER(MS3TraceList),
-                                                    ct.c_int, ct.c_int8, ct.c_int8, ct.c_int8])
-
-        self._ms3_readtracelist_selection = wrap_function(clibmseed, 'ms3_readtracelist_selection', ct.c_int,
-                                                          [ct.POINTER(ct.POINTER(MS3TraceList)), ct.c_char_p,
-                                                           ct.c_void_p, ct.c_void_p, ct.c_int8, ct.c_uint32, ct.c_int8])
+        self._record_handler = None
 
         # Allocate and initialize an MS3TraceList Structure
-        self._mstl = self._mstl3_init(None)
+        self._mstl = _mstl3_init(None)
 
         # Read a specified input file into the trace list
         if file_name is not None:
-            self.readFile(file_name, unpack_data=unpack_data, record_list=record_list,
-                          skip_not_data=skip_not_data, validate_crc=validate_crc,
-                          split_version=split_version, verbose=verbose)
+            self.read_file(file_name, unpack_data=unpack_data, record_list=record_list,
+                           skip_not_data=skip_not_data, validate_crc=validate_crc,
+                           split_version=split_version, verbose=verbose)
 
     def __repr__(self) -> str:
         repr = f'Trace List with {self.numtraceids} Source IDs\n'
@@ -373,7 +352,7 @@ class MSTraceList():
 
     def __del__(self) -> None:
         '''Free memory allocated at the C level for this MSTraceList'''
-        self._mstl3_free(ct.byref(self._mstl), 0)
+        _mstl3_free(ct.byref(self._mstl), 0)
         self._mstl = None
 
     @property
@@ -382,7 +361,7 @@ class MSTraceList():
 
     def get_traceid(self, sourceid, version=0) -> MS3TraceID:
         '''Return the requested trace ID structure'''
-        traceid = self._mstl3_findID(self._mstl, bytes(sourceid, 'utf-8'), ct.c_uint8(version), None)
+        traceid = _mstl3_findID(self._mstl, bytes(sourceid, 'utf-8'), ct.c_uint8(version), None)
 
         if traceid:
             return traceid.contents
@@ -410,10 +389,10 @@ class MSTraceList():
         _gaps = ct.c_int8(1 if gaps else 0)
         _versions = ct.c_int8(1 if versions else 0)
 
-        self._mstl3_printtracelist(self._mstl, timeformat, _details, _gaps, _versions)
+        _mstl3_printtracelist(self._mstl, timeformat, _details, _gaps, _versions)
 
-    def readFile(self, file_name, unpack_data=False, record_list=False,
-                 skip_not_data=False, validate_crc=True, split_version=False, verbose=0) -> MS3TraceList:
+    def read_file(self, file_name, unpack_data=False, record_list=False,
+                  skip_not_data=False, validate_crc=True, split_version=False, verbose=0) -> MS3TraceList:
         '''Read a miniSEED file into the trace list
         '''
         # Store list of files names for reference and use in record lists
@@ -434,11 +413,196 @@ class MSTraceList():
         if validate_crc:
             self.parse_flags.value |= MSF_VALIDATECRC.value
 
-        status = self._ms3_readtracelist_selection(ct.byref(self._mstl), file_name_bytes,
-                                                   self._tolerance, self._selections,
-                                                   self.split_version, self.parse_flags, verbose)
+        status = _ms3_readtracelist_selection(ct.byref(self._mstl), file_name_bytes,
+                                              self._tolerance, self._selections,
+                                              self.split_version, self.parse_flags, verbose)
 
         if status == MS_NOERROR:
             return self
         else:
             raise MseedLibError(status, f'Error reading miniSEED record')
+
+    def add_data(self,
+                 sourceid: str,
+                 data_samples: list,
+                 sample_type: str,
+                 sample_rate: float,
+                 start_time_str: str = None,
+                 start_time: int = None,
+                 start_time_seconds: float = None,
+                 publication_version: int = 0):
+        '''Add data samples to the trace list for the specified source ID
+
+        Data samples will be added to any existing trace segments that match.
+        If no matching trace segment is found, a new trace segment will be created.
+
+        The `sourceid` argument should be a valid FDSN source ID.
+
+        The `data_samples` argument should be a list of values to add.
+
+        The start time, or time of the first sample, can be specified in one
+        of three ways, used in this order of preference:
+            start_time:         nanoseconds since the epoch (full nanosecond resolution)
+            start_time_seconds: seconds since the epoch (limited to microseconds)
+            start_time_str:     date-time string
+        '''
+        msr = MS3Record()
+        seg = ct.c_void_p(0)
+
+        if sample_type not in ['i', 'f', 'd', 't']:
+            raise ValueError(f'Invalid sample type: {sample_type}')
+
+        msr.sourceid = sourceid
+        msr.samprate = sample_rate
+        msr.pubversion = publication_version
+
+        if start_time is not None:
+            msr.starttime = start_time
+        elif start_time_seconds is not None:
+            msr.starttime_seconds = start_time_seconds
+        elif start_time_str is not None:
+            msr.set_starttime_str(start_time_str)
+        else:
+            raise ValueError('Must specify either start_time, start_time_seconds or start_time_str')
+
+        msr._sampletype = sample_type.encode(encoding='utf-8')
+        msr._numsamples = len(data_samples)
+        msr._samplecnt = msr._numsamples
+
+        # Create an appropriate ctypes array of the data samples
+        if sample_type == 'i':
+            msr._datasamples = ct.cast((ct.c_int32 * msr._numsamples)(*data_samples),
+                                       ct.c_void_p)
+        elif sample_type == 'f':
+            msr._datasamples = ct.cast((ct.c_float * msr._numsamples)(*data_samples),
+                                       ct.c_void_p)
+        elif sample_type == 'd':
+            msr._datasamples = ct.cast((ct.c_double * msr._numsamples)(*data_samples),
+                                       ct.c_void_p)
+        elif sample_type == 't':
+            msr._datasamples = ct.cast((ct.c_char * msr._numsamples)(*data_samples),
+                                       ct.c_void_p)
+
+        # Add the MS3Record to the trace list, setting auto-heal flag to 1 (true)
+        seg = _mstl3_addmsr_recordptr(self._mstl, ct.byref(msr), None, 0, 1, 0, None)
+
+        if seg is None:
+            raise MseedLibError(MS_GENERROR, f'Error adding data samples')
+
+    def set_record_handler(self, record_handler, handler_data=None):
+        '''Set the record handler function and data called by MS3TraceList.pack()
+
+        The record_handler(record, handler_data) function must accept two arguments:
+
+                record:         A buffer containing a miniSEED record
+                handler_data:   The handler_data object passed to MS3Record.set_record_handler()
+
+        The function must use or copy the record buffer as the memory may be reused
+        on subsequent iterations.
+        '''
+        self._record_handler = record_handler
+        self._record_handler_data = handler_data
+
+        # Set up ctypes callback function to the wrapper function
+        RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
+        self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
+
+    def _record_handler_wrapper(self, record, record_length, handlerdata):
+        '''Callback function for mstl3_pack()
+
+        The `handlerdata` argument is unused; handler data is passed
+        via the class instance instead of through the C layer.
+        '''
+        # Cast the record buffer to a ctypes array for use in Python and pass to handler
+        self._record_handler(ct.cast(record, ct.POINTER((ct.c_char * record_length))).contents,
+                             self._record_handler_data)
+
+    def pack(self, flush_data=True, record_length=4096, encoding=DataEncoding.STEIM1,
+             format_version=None, extra_headers=None, verbose=0) -> (int, int):
+        '''Pack data into miniSEED record(s) and call `MSTraceList.record_handler()`
+
+        The record_handler() callback function must be registered with
+        MSTraceList.set_record_handler().
+
+        If `flush_data` is True, all data samples will be packed.  In the case of
+        miniSEED format version 2, this will likely create unfilled final records.
+
+        If `flush_data` is False, as many fully-packed records will be created as
+        possible.  Packed samples will be removed from the trace list.  This is useful
+        for creating a rolling buffer of data for packing into miniSEED records.
+        To flush any remaining, buffered data samples, a final call to pack() with
+        `flush_data` set to True is required.
+
+        The `record_length` argument specifies the maximum length of the packed
+        records in bytes.
+
+        The `encoding` argument specifies the data sample encoding to use for the
+        packed records.  The value must be one of the DataEncoding enum values and
+        approproate for the data sample type.
+
+        The `format_version` argument specifies the miniSEED format version to
+        create, either 2 or 3.
+
+        The `extra_headers`, if specified, must be JSON-formatted extra headers
+        that will be added to the record(s).
+
+        Returns a tuple of (packed_samples, packed_records)
+        '''
+
+        if self._record_handler is None:
+            raise ValueError('No record handler function registered, see MSTraceList.set_record_handler()')
+
+        pack_flags = ct.c_uint32(0)
+        packed_samples = ct.c_int64(0)
+
+        if flush_data:
+            pack_flags.value |= MSF_FLUSHDATA.value
+
+        if format_version is not None:
+            if format_version not in [2, 3]:
+                raise ValueError(f'Invalid miniSEED format version: {format_version}')
+
+            if format_version == 2:
+                pack_flags.value |= MSF_PACKVER2.value
+
+        packed_records = _mstl3_pack(self._mstl, self._ctypes_record_handler, None,
+                                     record_length, encoding, ct.byref(packed_samples),
+                                     pack_flags, verbose,
+                                     extra_headers.encode('utf-8') if extra_headers else None)
+
+        if packed_records < 0:
+            raise MseedLibError(packed_records, f'Error packing miniSEED record(s)')
+
+        return (packed_samples.value, packed_records)
+
+
+# Module-level C-function wrappers
+_mstl3_init = wrap_function(clibmseed, 'mstl3_init', ct.POINTER(MS3TraceList),
+                            [ct.POINTER(MS3TraceList)])
+
+_mstl3_free = wrap_function(clibmseed, 'mstl3_free', None,
+                            [ct.POINTER(ct.POINTER(MS3TraceList)), ct.c_int8])
+
+_mstl3_findID = wrap_function(clibmseed, 'mstl3_findID', ct.POINTER(MS3TraceID),
+                              [ct.POINTER(MS3TraceList), ct.c_char_p, ct.c_uint8, ct.c_void_p])
+
+_mstl3_printtracelist = wrap_function(clibmseed, 'mstl3_printtracelist', None,
+                                      [ct.POINTER(MS3TraceList),
+                                       ct.c_int, ct.c_int8, ct.c_int8, ct.c_int8])
+
+_ms3_readtracelist_selection = wrap_function(clibmseed, 'ms3_readtracelist_selection', ct.c_int,
+                                             [ct.POINTER(ct.POINTER(MS3TraceList)), ct.c_char_p,
+                                              ct.c_void_p, ct.c_void_p, ct.c_int8, ct.c_uint32, ct.c_int8])
+
+_mstl3_pack = wrap_function(clibmseed, 'mstl3_pack', ct.c_int64,
+                            [ct.POINTER(MS3TraceList), ct.c_void_p, ct.c_void_p,
+                             ct.c_int, ct.c_int8, ct.POINTER(ct.c_int64), ct.c_uint32,
+                             ct.c_int8, ct.c_char_p])
+
+_mstl3_unpack_recordlist = wrap_function(clibmseed, 'mstl3_unpack_recordlist', ct.c_int64,
+                                         [ct.POINTER(MS3TraceID), ct.POINTER(MS3TraceSeg),
+                                          ct.c_void_p, ct.c_size_t, ct.c_int8])
+
+_mstl3_addmsr_recordptr = wrap_function(clibmseed, 'mstl3_addmsr_recordptr', ct.POINTER(MS3TraceSeg),
+                                        [ct.POINTER(MS3TraceList), ct.POINTER(MS3Record),
+                                        ct.c_void_p, ct.c_int8, ct.c_int8, ct.c_uint32, ct.c_void_p])

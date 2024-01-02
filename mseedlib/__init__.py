@@ -5,7 +5,7 @@ from .msrecord import MS3Record
 from .msrecord_reader import MS3RecordReader
 from .msrecord_buffer_reader import MS3RecordBufferReader
 from .mstracelist import MSTraceList
-from .util import sourceid2nslc, nslc2sourceid
+from .util import nstime2timestr, timestr2nstime, sourceid2nslc, nslc2sourceid, sampletime
 
 
 __all__ = ["__version__", "libmseed_version",
@@ -15,5 +15,5 @@ __all__ = ["__version__", "libmseed_version",
            "MS3RecordReader",
            "MS3RecordBufferReader",
            "MSTraceList",
-           "sourceid2nslc", "nslc2sourceid"
+           "nstime2timestr", "timestr2nstime", "sourceid2nslc", "nslc2sourceid", "sampletime",
            ]
