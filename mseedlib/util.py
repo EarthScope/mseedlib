@@ -65,20 +65,20 @@ def sourceid2nslc(sourceid: str) -> tuple:
         raise ValueError("Invalid source ID: %s" % sourceid)
 
 
-def nslc2sourceid(net: str, sta: str = None, loc: str = None, chan: str = None) -> str:
+def nslc2sourceid(net: str, sta: str, loc: str, chan: str) -> str:
     """Convert network, station, location, channel codes to an FDSN source ID"""
-    sourceid = ct.create_string_buffer(LM_SIDLEN)
+    sourceid = ct.create_string_buffer(LM_SIDLEN + 1)
 
-    status = ms_nslc2sid(sourceid, LM_SIDLEN, 0,
+    status = ms_nslc2sid(sourceid, LM_SIDLEN + 1, 0,
                          net.encode(),
-                         sta.encode() if sta else None,
-                         loc.encode() if loc else None,
-                         chan.encode() if chan else None)
+                         sta.encode(),
+                         loc.encode(),
+                         chan.encode())
 
     if status != -1:
         return sourceid.value.decode()
     else:
-        raise ValueError("Invalid NSLC: %s,%s,%s,%s" % (net, sta, loc, chan))
+        raise ValueError("Invalid NSLC codes: %s,%s,%s,%s" % (net, sta, loc, chan))
 
 def sampletime(nstime: int, offset: int, samprate: float) -> int:
     """Calculate nanosecond timestamp of a sample offset from a start time"""
