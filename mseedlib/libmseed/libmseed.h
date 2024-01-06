@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Copyright (C) 2023:
+ * Copyright (C) 2024:
  * @author Chad Trabant, EarthScope Data Services
  ***************************************************************************/
 
@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-#define LIBMSEED_VERSION "3.0.17"    //!< Library version
-#define LIBMSEED_RELEASE "2023.206"  //!< Library release date
+#define LIBMSEED_VERSION "3.0.18"    //!< Library version
+#define LIBMSEED_RELEASE "2024.006"  //!< Library release date
 
 /** @defgroup io-functions File and URL I/O */
 /** @defgroup miniseed-record Record Handling */
@@ -133,7 +133,8 @@ extern "C" {
 #endif
 
 #define MINRECLEN 40       //!< Minimum miniSEED record length supported
-#define MAXRECLEN 131172   //!< Maximum miniSEED record length supported
+#define MAXRECLEN 10485760 //!< Maximum miniSEED record length supported (10MiB)
+#define MAXRECLENv2 131172 //!< Maximum v2 miniSEED record length supported (131+ KiB or 2^17)
 
 #define LM_SIDLEN 64       //!< Length of source ID string
 
@@ -369,7 +370,7 @@ typedef struct MS3Record {
   int64_t         samplecnt;         //!< Number of samples in record
   uint32_t        crc;               //!< CRC of entire record
   uint16_t        extralength;       //!< Length of extra headers in bytes
-  uint16_t        datalength;        //!< Length of data payload in bytes
+  uint32_t        datalength;        //!< Length of data payload in bytes
   char           *extra;             //!< Pointer to extra headers
 
   /* Data sample fields */
