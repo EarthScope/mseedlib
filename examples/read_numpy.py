@@ -4,8 +4,13 @@
 # data samples directly into NumPy arrays.
 #
 # The data are organized into a list of dictionaries, one for
-# contiguous trace of data.  The dictionaries contain very
-# basic metadata and a NumPy array of data samples.
+# each contiguous trace of data.  The dictionaries contain very
+# basic metadata and a NumPy array of data samples.  This data
+# structure is for illustration only, and would like need
+# adaptation for a real application.
+#
+# This file is part of the mseedlib module.
+# Copywrite (c) 2024, EarthScope Data Services
 
 import os
 import sys
@@ -30,25 +35,15 @@ traces = []
 # Translate libmseed sample type to numpy type
 nptype = {'i': np.int32, 'f': np.float32, 'd': np.float64, 't': np.char}
 
-# Parse input data into a trace list, creating record lists for each trace
 mstl = MSTraceList()
 
-# Read all input files
+# Read all input files, creating a record lists and _not_ unpacking data samples
 for file in input_files:
     print("Reading file: %s" % file)
-    mstl.readFile(file, unpack_data=False, record_list=True)
+    mstl.read_file(file, unpack_data=False, record_list=True)
 
 for traceid in mstl.traceids():
     for segment in traceid.segments():
-
-        # Create a dictionary for the trace with basic metadata
-        trace = {'sourceid': traceid.sourceid,
-                 'NSLC': sourceid2nslc(traceid.sourceid),
-                 'publication_version': traceid.pubversion,
-                 'start_time': segment.starttime_str(),
-                 'end_time': segment.endtime_str(),
-                 'sample_rate': segment.samprate}
-
         # Fetch estimated sample size and type
         (sample_size, sample_type) = segment.sample_size_type
 
@@ -61,8 +56,14 @@ for traceid in mstl.traceids():
         segment.unpack_recordlist(buffer_pointer=np.ctypeslib.as_ctypes(data_samples),
                                   buffer_bytes=data_samples.nbytes)
 
-        # Add data samples to trace dictionary
-        trace['data_samples'] = data_samples
+        # Create a dictionary for the trace with basic metadata
+        trace = {'sourceid': traceid.sourceid,
+                 'NSLC': sourceid2nslc(traceid.sourceid),
+                 'publication_version': traceid.pubversion,
+                 'start_time': segment.starttime_str(),
+                 'end_time': segment.endtime_str(),
+                 'sample_rate': segment.samprate,
+                 'data_samples': data_samples}
 
         traces.append(trace)
 

@@ -20,7 +20,7 @@ class MS3Record(ct.Structure):
                 ('_samplecnt',     ct.c_int64),   # Number of samples in record
                 ('_crc',           ct.c_uint32),  # CRC of entire record
                 ('_extralength',   ct.c_uint16),  # Length of extra headers in bytes
-                ('_datalength',    ct.c_uint16),  # Length of data payload in bytes
+                ('_datalength',    ct.c_uint32),  # Length of data payload in bytes
                 ('_extra',         ct.c_char_p),  # Pointer to extra headers (JSON)
                 ('_datasamples',   ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
                 ('_datasize',      ct.c_size_t),  # Size of datasamples buffer in bytes

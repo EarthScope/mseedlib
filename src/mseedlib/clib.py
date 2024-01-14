@@ -7,9 +7,9 @@ from platform import system
 module_path = os.path.abspath(os.path.dirname(__file__))
 platform_system = system()
 
-if platform_system == "Darwin":
+if platform_system.lower().startswith("darwin"):
     libpath = os.path.join(module_path, 'libmseed', 'libmseed.dylib')
-elif platform_system == "Windows":
+elif platform_system.lower().startswith("windows"):
     libpath = os.path.join(module_path, 'libmseed', 'libmseed.dll')
 else:
     libpath = os.path.join(module_path, 'libmseed', 'libmseed.so')

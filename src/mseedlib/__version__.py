@@ -1,7 +1,7 @@
 import os
 
-# Cononical module version
-__version__ = '0.1.0'
+# Module version
+__version__ = '0.0.1'
 
 
 def libmseed_version():

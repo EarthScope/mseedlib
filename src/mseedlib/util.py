@@ -67,7 +67,8 @@ def sourceid2nslc(sourceid: str) -> tuple:
 
 def nslc2sourceid(net: str, sta: str, loc: str, chan: str) -> str:
     """Convert network, station, location, channel codes to an FDSN source ID"""
-    sourceid = ct.create_string_buffer(LM_SIDLEN + 1)
+    #sourceid = ct.create_string_buffer(LM_SIDLEN + 1)
+    sourceid = ct.create_string_buffer(21)
 
     status = ms_nslc2sid(sourceid, LM_SIDLEN + 1, 0,
                          net.encode(),

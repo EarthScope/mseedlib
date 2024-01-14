@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mseedlib"
+description = "A Python package for reading and writing miniSEED formatted data"
+authors = [
+    { name = "EarthScope Data Services", email = "software@earthscope.org" },
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+keywords = ["seismology", "miniseed", "mseed", "data", "waveform", "seismic"]
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License 2.0 (Apache-2.0)",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: POSIX :: Other",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/EarthScope/mseedlib"
+Issues = "https://github.com/EarthScope/mseedlib/issues"
+
+[tool.setuptools_scm]
+
+[tool.setuptools.dynamic]
+version = { attr = "mseedlib.__version__" }
+
+[tool.setuptools.package-data]
+#"mseedlib.libmseed" = ['libmseed*.dylib', 'libmseed*.so', 'libmseed*.dll']
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

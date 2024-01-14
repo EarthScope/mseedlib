@@ -5,7 +5,6 @@ from enum import IntEnum
 # Some common definitions from libmseed.h needed by the module
 
 # Constants and other defines from from libmseed.h
-MAXRECLEN = 131172
 LM_SIDLEN = 64
 NSTMODULUS = 1000000000
 NSTERROR = -2145916800000000000
