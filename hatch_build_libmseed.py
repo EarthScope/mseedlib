@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import subprocess
+from packaging.tags import sys_tags
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -12,6 +13,13 @@ class CustomBuildHook(BuildHookInterface):
     libmseed_path = os.path.join(package_path, 'libmseed')
 
     def initialize(self, version, build_data):
+        # Set wheel tag, e.g. py3-none-macosx_14_0_x86_64
+        python_tag = f'py{sys.version_info.major}'
+        abi_tag = 'none'
+        platform_tag = next(sys_tags()).platform
+        build_data['tag'] = f'{python_tag}-{abi_tag}-{platform_tag}'
+        build_data['pure_python'] = False
+
         print(f"Building libmseed via Makefile in {self.libmseed_path}")
 
         if sys.platform.lower().startswith("windows"):
