@@ -1,6 +1,6 @@
 import os
 
-# Module version
+# Package version
 __version__ = '0.0.1'
 
 

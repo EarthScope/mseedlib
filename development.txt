@@ -17,6 +17,15 @@ python -m pip install --editable .
 python -m pip install pytest
 pytest
 
+The package must be installed to be tested because the 
+C library must be compiled and this is done during packaging.
+
+# Update release version
+The single-source package version is specified in:
+src/mseedlib/__version__.py
+
+The versioning follows the semantic versioning definition.
+
 # Building wheels
 
 ## Ensure required build modules are installed

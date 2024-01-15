@@ -44,9 +44,10 @@ exclude = [
     "src/mseedlib/libmseed/example/*",
 ]
 artifacts = [
-  "src/mseedlib/*.so",
-  "src/mseedlib/*.dylib",
-  "src/mseedlib/*.dll",
+  "src/mseedlib/libmseed.so",
+  "src/mseedlib/libmseed.dylib",
+  "src/mseedlib/libmseed.dll",
+  "src/mseedlib/libmseed.h",
 ]
 
 #[tool.hatch.build.targets.sdist]
