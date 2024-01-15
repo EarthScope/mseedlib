@@ -10,11 +10,11 @@ python3 -m venv dev
 source ./dev/bin/activate
 
 ## Install the module locally using the source in-place
-python -m pip install --editable .
+python3 -m pip install --editable .
 
 # Testing
 
-python -m pip install pytest
+python3 -m pip install pytest
 pytest
 
 The package must be installed to be tested because the 
@@ -26,14 +26,14 @@ src/mseedlib/__version__.py
 
 The versioning follows the semantic versioning definition.
 
-# Building wheels
+# Building distribution packages
 
 ## Ensure required build modules are installed
-python -m pip install wheel build twine
+python3 -m pip install build twine
 
-## Build wheel
-python -m build --wheel
+## Build sdist and wheel
+python3 -m build
 
 ## Test and upload to PyPI
-python -m twine check --strict dist/*
-python -m twine upload dist/*
+python3 -m twine check --strict dist/*
+python3 -m twine upload dist/*

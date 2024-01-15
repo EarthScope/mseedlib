@@ -23,12 +23,11 @@ class CustomBuildHook(BuildHookInterface):
         print(f"Building libmseed via Makefile in {self.libmseed_path}")
 
         if sys.platform.lower().startswith("windows"):
-            cmd = f"pushd {self.libmseed_path} && nmake /f Makefile.win dll & popd"
+            cmd = f"nmake /f Makefile.win dll"
         else:
-            cmd = f"make -C {self.libmseed_path} -j shared"
-            env = {'CFLAGS': '-O3'}
+            cmd = f"CFLAGS='-O3' make -j shared"
 
-        subprocess.check_call(cmd, env=env, shell=True)
+        subprocess.check_call(cmd, cwd=self.libmseed_path, shell=True)
 
         # Copy shared library to root package location
         if os.path.exists(os.path.join(self.libmseed_path, 'libmseed.so')):
