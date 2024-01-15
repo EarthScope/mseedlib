@@ -37,10 +37,10 @@ Issues = "https://github.com/EarthScope/mseedlib/issues"
 [tool.setuptools_scm]
 
 [tool.setuptools.dynamic]
-version = { attr = "mseedlib.__version__" }
+version = { file = "src/mseedlib/VERSION" }
 
 [tool.setuptools.package-data]
-#"mseedlib.libmseed" = ['libmseed*.dylib', 'libmseed*.so', 'libmseed*.dll']
+"mseedlib.libmseed" = ['libmseed*.dylib', 'libmseed*.so', 'libmseed*.dll']
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

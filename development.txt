@@ -1,0 +1,30 @@
+Commands needed for setting up a development environment, building wheels, 
+and uploading to PyPI
+
+# Development environment
+
+## Create the development environment, only needed once
+python3 -m venv dev
+
+## Activate the development environment
+source ./dev/bin/activate
+
+## Install the module locally using the source in-place
+python -m pip install --editable .
+
+# Testing
+
+python -m pip install pytest
+pytest
+
+# Building wheels
+
+## Ensure required build modules are installed
+python -m pip install wheel build twine
+
+## Build wheel
+python -m build --wheel
+
+## Test and upload to PyPI
+python -m twine check --strict dist/*
+python -m twine upload dist/*

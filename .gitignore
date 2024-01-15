@@ -26,6 +26,9 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Development environment
+dev/
+
 # Sphinx documentation
 docs/_build/
 
