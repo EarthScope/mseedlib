@@ -1,18 +1,18 @@
 
 import os
 import ctypes as ct
-from platform import system
 
-# Determine the platform and load the appropriate local library
+# Find the path to the shared library and load it
 module_path = os.path.abspath(os.path.dirname(__file__))
-platform_system = system()
 
-if platform_system.lower().startswith("darwin"):
-    libpath = os.path.join(module_path, 'libmseed', 'libmseed.dylib')
-elif platform_system.lower().startswith("windows"):
-    libpath = os.path.join(module_path, 'libmseed', 'libmseed.dll')
+if os.path.exists(os.path.join(module_path, 'libmseed.so')):
+    libpath = os.path.join(module_path, 'libmseed.so')
+elif os.path.exists(os.path.join(module_path, 'libmseed.dylib')):
+    libpath = os.path.join(module_path, 'libmseed.dylib')
+elif os.path.exists(os.path.join(module_path, 'libmseed.dll')):
+    libpath = os.path.join(module_path, 'libmseed.dll')
 else:
-    libpath = os.path.join(module_path, 'libmseed', 'libmseed.so')
+    raise Exception("Unable to find libmseed shared library")
 
 clibmseed = ct.cdll.LoadLibrary(libpath)
 

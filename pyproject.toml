@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "mseedlib"
@@ -14,7 +14,7 @@ keywords = ["seismology", "miniseed", "mseed", "data", "waveform", "seismic"]
 license = { text = "Apache-2.0" }
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License 2.0 (Apache-2.0)",
+    "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Operating System :: MacOS :: MacOS X",
@@ -34,13 +34,28 @@ dynamic = ["version"]
 Homepage = "https://github.com/EarthScope/mseedlib"
 Issues = "https://github.com/EarthScope/mseedlib/issues"
 
-[tool.setuptools_scm]
+[tool.hatch.version]
+path = "src/mseedlib/__version__.py"
 
-[tool.setuptools.dynamic]
-version = { file = "src/mseedlib/VERSION" }
+[tool.hatch.build]
+exclude = [
+    "src/mseedlib/libmseed/test/*",
+    "src/mseedlib/libmseed/doc/*",
+    "src/mseedlib/libmseed/example/*",
+]
+artifacts = [
+  "src/mseedlib/*.so",
+  "src/mseedlib/*.dylib",
+  "src/mseedlib/*.dll",
+]
 
-[tool.setuptools.package-data]
-"mseedlib.libmseed" = ['libmseed*.dylib', 'libmseed*.so', 'libmseed*.dll']
+#[tool.hatch.build.targets.sdist]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build_libmseed.py"
+
+[tool.hatch.build.targets.wheel]
+exclude = ['src/mseedlib/libmseed']
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
