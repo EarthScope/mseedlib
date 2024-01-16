@@ -11,7 +11,7 @@ for most of the heavy data format and manipulation work.
 
 The [releases](https://pypi.org/project/mseedlib/) should be installed
 directly from PyPI with, for example, `pip install mseedlib`.
-The package does not depending on anything other than the Python standard library.
+The package does not depend on anything other than the Python standard library.
 
 ## Example usage
 
