@@ -50,8 +50,6 @@ artifacts = [
   "src/mseedlib/libmseed.h",
 ]
 
-#[tool.hatch.build.targets.sdist]
-
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "hatch_build_libmseed.py"
 

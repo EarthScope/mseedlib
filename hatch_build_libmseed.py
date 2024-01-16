@@ -22,7 +22,7 @@ class CustomBuildHook(BuildHookInterface):
 
         print(f"Building libmseed via Makefile in {self.libmseed_path}")
 
-        if sys.platform.lower().startswith("windows"):
+        if sys.platform.lower().startswith("win"):
             cmd = f"nmake /f Makefile.win dll"
         else:
             cmd = f"CFLAGS='-O3' make -j shared"

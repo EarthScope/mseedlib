@@ -14,11 +14,11 @@ python3 -m pip install --editable .
 
 # Testing
 
+The package must be installed to be tested because the C library
+must be compiled and this is done during packaging.
+
 python3 -m pip install pytest
 pytest
-
-The package must be installed to be tested because the 
-C library must be compiled and this is done during packaging.
 
 # Update release version
 The single-source package version is specified in:
