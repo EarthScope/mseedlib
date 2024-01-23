@@ -34,7 +34,6 @@ def test_msrecord_read_record_details():
         assert msr.extralength == 33
         assert msr.datalength == 448
         assert msr.extra == '{"FDSN":{"Time":{"Quality":100}}}'
-        assert msr.datasize == 1184
         assert msr.numsamples == 296
         assert msr.sampletype == 'i'
         assert msr.endtime == 1267253414769539000

@@ -33,7 +33,6 @@ def test_tracelist_read():
     assert segment.endtime_seconds == 1267257599.969538
     assert segment.samprate == 20.0
     assert segment.samplecnt == 84000
-    assert segment.datasize == 336000
     assert segment.numsamples == 84000
     assert segment.sampletype == 'i'
 

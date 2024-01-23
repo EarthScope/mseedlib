@@ -15,7 +15,7 @@ class MS3Record(ct.Structure):
                 ('_flags',         ct.c_uint8),   # Record-level bit flags
                 ('_starttime',     ct.c_int64),   # Record start time (first sample)
                 ('_samprate',      ct.c_double),  # Nominal sample rate as samples/second (Hz) or period (s)
-                ('_encoding',      ct.c_int8),    # Data encoding format
+                ('_encoding',      ct.c_int16),    # Data encoding format
                 ('_pubversion',    ct.c_uint8),   # Publication version
                 ('_samplecnt',     ct.c_int64),   # Number of samples in record
                 ('_crc',           ct.c_uint32),  # CRC of entire record
@@ -23,7 +23,7 @@ class MS3Record(ct.Structure):
                 ('_datalength',    ct.c_uint32),  # Length of data payload in bytes
                 ('_extra',         ct.c_char_p),  # Pointer to extra headers (JSON)
                 ('_datasamples',   ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
-                ('_datasize',      ct.c_size_t),  # Size of datasamples buffer in bytes
+                ('_datasize',      ct.c_uint64),  # Size of datasamples buffer in bytes
                 ('_numsamples',    ct.c_int64),   # Number of data samples in 'datasamples'
                 ('_sampletype',    ct.c_char)]    # Sample type code: t (text), i (int32) , f (float), d (double)
 

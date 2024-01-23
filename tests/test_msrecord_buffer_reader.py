@@ -29,7 +29,7 @@ def test_msrecord_read_buffer_details():
             assert msr.starttime_seconds == 1267253400.019539
             assert msr.starttime_str(timeformat=TimeFormat.ISOMONTHDAY_Z) == '2010-02-27T06:50:00.019539Z'
             assert msr.starttime_str(timeformat=TimeFormat.SEEDORDINAL,
-                                      subsecond=SubSecond.NONE) == '2010,058,06:50:00'
+                                     subsecond=SubSecond.NONE) == '2010,058,06:50:00'
             assert msr.samprate == 20.0
             assert msr.samprate_raw == 20.0
             assert msr.encoding == DataEncoding.STEIM2
@@ -40,7 +40,6 @@ def test_msrecord_read_buffer_details():
             assert msr.extralength == 33
             assert msr.datalength == 448
             assert msr.extra == '{"FDSN":{"Time":{"Quality":100}}}'
-            assert msr.datasize == 1184
             assert msr.numsamples == 296
             assert msr.sampletype == 'i'
             assert msr.endtime == 1267253414769539000

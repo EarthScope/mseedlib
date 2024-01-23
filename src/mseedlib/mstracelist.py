@@ -199,7 +199,7 @@ MS3TraceSeg._fields_ = [('starttime',    ct.c_int64),   # Time of first sample
                         ('samprate',     ct.c_double),  # Nominal sample rate as samples/second (Hz) or period (s)
                         ('samplecnt',    ct.c_int64),   # Number of samples in trace coverage
                         ('_datasamples', ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
-                        ('datasize',     ct.c_size_t),  # Size of datasamples buffer in bytes
+                        ('datasize',     ct.c_uint64),  # Size of datasamples buffer in bytes
                         ('numsamples',   ct.c_int64),   # Number of data samples in 'datasamples'
                         ('_sampletype',  ct.c_char),   # Sample type code: t (text), i (int32) , f (float), d (double)
                         ('_prvtptr',     ct.c_void_p),  # Private pointer, in this code: pointer to trace ID
@@ -601,7 +601,7 @@ _mstl3_pack = wrap_function(clibmseed, 'mstl3_pack', ct.c_int64,
 
 _mstl3_unpack_recordlist = wrap_function(clibmseed, 'mstl3_unpack_recordlist', ct.c_int64,
                                          [ct.POINTER(MS3TraceID), ct.POINTER(MS3TraceSeg),
-                                          ct.c_void_p, ct.c_size_t, ct.c_int8])
+                                          ct.c_void_p, ct.c_uint64, ct.c_int8])
 
 _mstl3_addmsr_recordptr = wrap_function(clibmseed, 'mstl3_addmsr_recordptr', ct.POINTER(MS3TraceSeg),
                                         [ct.POINTER(MS3TraceList), ct.POINTER(MS3Record),
