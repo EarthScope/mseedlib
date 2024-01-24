@@ -1,3 +1,4 @@
+import sys
 import ctypes as ct
 from .clib import clibmseed, wrap_function
 from .definitions import *
@@ -8,8 +9,9 @@ from .msrecord import MS3Record
 class MS3RecordReader():
     """Read miniSEED records from a file or file descriptor
 
-    If `input` is an integer, it is assumed to be an open file descriptor,
-    otherwise it is assumed to be a path (file) name.  In all cases the
+    If `input` is not an integer is should be a path (file) name to read
+    from.  If input is an integer, and the host system is _not_ Windows,
+    it is assumed to be an open file descriptor to read from.  In all cases the
     file or descriptor will be closed when the objects close() is called.
 
     If `unpack_data` is True, the data samples will be decoded.
@@ -51,8 +53,15 @@ class MS3RecordReader():
 
         # If the stream is an integer, assume an open file descriptor
         if isinstance(input, int):
+            if sys.platform.lower().startswith("win"):
+                raise NotImplementedError('File descriptor support not implemented on Windows')
+
             self._msfp = ct.c_void_p(self.ms3_mstl_init_fd(input))
             self.stream_name = bytes(f'File Descriptor {input}', 'utf-8')
+
+            if self._msfp is None:
+                raise MseedLibError(MS_GENERROR, f'Error initializing file descriptor {input}')
+
         # Otherwise, assume a path name
         else:
             self.stream_name = bytes(input, 'utf-8')

@@ -1,4 +1,5 @@
 import pytest
+import sys
 import os
 from mseedlib import MS3RecordReader, DataEncoding, TimeFormat, SubSecond
 from mseedlib.exceptions import MseedLibError
@@ -50,6 +51,11 @@ def test_msrecord_read_record_details():
 
 def test_msrecord_read_record_details_fd():
     # Open a file descriptor in python and provide the open stream to the reader
+
+    # File descriptor support is not implemented on Windows
+    if sys.platform.lower().startswith("win"):
+        return
+
     # Using a file for tesing, but this could be stdin or any other input stream
     fp = open(test_path2, 'rb', buffering=0)
 
