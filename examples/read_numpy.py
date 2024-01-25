@@ -14,6 +14,7 @@
 
 import os
 import sys
+import pprint
 import numpy as np
 from mseedlib import MSTraceList, sourceid2nslc
 
@@ -67,4 +68,6 @@ for traceid in mstl.traceids():
 
         traces.append(trace)
 
-print(traces)
+# Pretty print the trace list
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(traces)
