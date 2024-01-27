@@ -120,9 +120,6 @@ def test_mstracelist_pack():
     # Create a new MSTraceList object
     mstl = MSTraceList()
 
-    # Set record handler
-    mstl.set_record_handler(record_handler)
-
     total_samples = 0
     total_records = 0
     sample_rate = 40.0
@@ -138,14 +135,15 @@ def test_mstracelist_pack():
 
         start_time = sampletime(start_time, len(new_data), sample_rate)
 
-        (packed_samples, packed_records) = mstl.pack(flush_data=False,
-                                                    format_version=format_version,
-                                                    record_length=record_length)
+        (packed_samples, packed_records) = mstl.pack(record_handler,
+                                                     flush_data=False,
+                                                     format_version=format_version,
+                                                     record_length=record_length)
 
         total_samples += packed_samples
         total_records += packed_records
 
-    (packed_samples, packed_records) = mstl.pack(flush_data=True,
+    (packed_samples, packed_records) = mstl.pack(record_handler,
                                                  format_version=format_version,
                                                  record_length=record_length)
 

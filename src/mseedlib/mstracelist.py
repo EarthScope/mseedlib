@@ -489,40 +489,27 @@ class MSTraceList():
         if seg is None:
             raise MseedLibError(MS_GENERROR, f'Error adding data samples')
 
-    def set_record_handler(self, record_handler, handler_data=None):
-        '''Set the record handler function and data called by MS3TraceList.pack()
-
-        The record_handler(record, handler_data) function must accept two arguments:
-
-                record:         A buffer containing a miniSEED record
-                handler_data:   The handler_data object passed to MS3Record.set_record_handler()
-
-        The function must use or copy the record buffer as the memory may be reused
-        on subsequent iterations.
-        '''
-        self._record_handler = record_handler
-        self._record_handler_data = handler_data
-
-        # Set up ctypes callback function to the wrapper function
-        RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
-        self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
-
     def _record_handler_wrapper(self, record, record_length, handlerdata):
         '''Callback function for mstl3_pack()
+        Ignore the handlerdata argument, which is passed at the Python level.
 
-        The `handlerdata` argument is unused; handler data is passed
-        via the class instance instead of through the C layer.
+        Cast the record buffer to a ctypes array for use in Python and pass to handler.
         '''
-        # Cast the record buffer to a ctypes array for use in Python and pass to handler
         self._record_handler(ct.cast(record, ct.POINTER((ct.c_char * record_length))).contents,
                              self._record_handler_data)
 
-    def pack(self, flush_data=True, record_length=4096, encoding=DataEncoding.STEIM1,
+    def pack(self, handler, handlerdata=None, flush_data=True,
+             record_length=4096, encoding=DataEncoding.STEIM1,
              format_version=None, extra_headers=None, verbose=0) -> (int, int):
-        '''Pack data into miniSEED record(s) and call `MSTraceList.record_handler()`
+        '''Pack data into miniSEED record(s) and call `handler()`
 
-        The record_handler() callback function must be registered with
-        MSTraceList.set_record_handler().
+        The `handler(record, handlerdata)` function must accept two arguments:
+
+                record:         A buffer containing a miniSEED record
+                handlerdata:    The `handlerdata` value
+
+        The handler function must use or copy the record buffer as the memory may be
+        reused on subsequent iterations.
 
         If `flush_data` is True, all data samples will be packed.  In the case of
         miniSEED format version 2, this will likely create unfilled final records.
@@ -549,8 +536,14 @@ class MSTraceList():
         Returns a tuple of (packed_samples, packed_records)
         '''
 
-        if self._record_handler is None:
-            raise ValueError('No record handler function registered, see MSTraceList.set_record_handler()')
+        # Set hander function as ctypes callback function
+        if not hasattr(self, '_record_handler') or (self._record_handler != handler):
+            self._record_handler = handler
+
+            RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
+            self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
+
+        self._record_handler_data = handlerdata
 
         pack_flags = ct.c_uint32(0)
         packed_samples = ct.c_int64(0)

@@ -27,10 +27,6 @@ class MS3Record(ct.Structure):
                 ('_numsamples',    ct.c_int64),   # Number of data samples in 'datasamples'
                 ('_sampletype',    ct.c_char)]    # Sample type code: t (text), i (int32) , f (float), d (double)
 
-    def __init__(self):
-        super().__init__()
-        self._record_handler = None
-
     def __repr__(self) -> str:
         return (f'{self.sourceid}, '
                 f'{self.pubversion}, '
@@ -331,62 +327,51 @@ class MS3Record(ct.Structure):
         '''Print details of the record to stdout, with varying levels of `details`'''
         _msr3_print(ct.byref(self), details)
 
-    def set_record_handler(self, record_handler, handler_data=None) -> None:
-        '''Set the record handler function and data called by MS3Record.pack()
-
-        The record_handler(record, handler_data) function must accept two arguments:
-
-                record:         A buffer containing a miniSEED record
-                handler_data:   The handler_data object passed to MS3Record.set_record_handler()
-
-        The function must use or copy the record buffer as the memory may be reused
-        on subsequent iterations.
-        '''
-        self._record_handler = record_handler
-        self._record_handler_data = handler_data
-
-        # Set up ctypes callback function to the wrapper function
-        RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
-        self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
-
     def _record_handler_wrapper(self, record, record_length, handlerdata) -> None:
         '''Callback function for msr3_pack()
+        Ignore the handlerdata argument, which is passed at the Python level.
 
-        The `handlerdata` argument is purposely unused, as handler data is passed
-        via the class instance instead of through the C layer.
+        Cast the record buffer to a ctypes array for use in Python and pass to handler.
         '''
-        # Cast the record buffer to a ctypes array for use in Python and pass to handler
         self._record_handler(ct.cast(record, ct.POINTER((ct.c_char * record_length))).contents,
                              self._record_handler_data)
 
-    def pack(self, datasamples=None, sampletype=None, flush_data=True, verbose=0) -> (int, int):
-        '''Pack `datasamples` into miniSEED record(s) and call `MSRecord.record_handler()`
+    def pack(self, handler, handlerdata=None, datasamples=None, sampletype=None,
+             verbose=0) -> (int, int):
+        '''Pack `datasamples` into miniSEED record(s) and call `handler()`
 
-        The record_handler() callback function must be registered with
-        MS3Record.set_record_handler().
+        The `handler(record, handlerdata)` function must accept two arguments:
+
+                record:         A buffer containing a miniSEED record
+                handlerdata:    The `handlerdata` value
+
+        The handler function must use or copy the record buffer as the memory may be
+        reused on subsequent iterations.
 
         If `datasamples` is not None, it must be a sequence of samples that can be
         packed into the type specified by `sampletype` and appropriate for MS3Record.encoding.
         If `datasamples` is None, any samples associated with the MS3Record will be packed.
 
-        If `flush_data` is True, all data samples will be packed.  In the case of miniSEED
-        format version 2, this will likely create an unfilled final record.
-
-        If `flush_data` is False, as many fully-packed records will be created as possible.
-        The `datasamples` sequence will _not_ be modified, it is up to the caller to
-        adjust the sequence to remove samples that have been packed if desired.
+        For more flexible packing of records, including multiple channels and rolling
+        buffer support, `see MSTraceList.pack()`.
 
         Returns a tuple of (packed_samples, packed_records)
         '''
 
-        if self._record_handler is None:
-            raise ValueError('No record handler function registered, see MS3Record.set_record_handler()')
+        # Set hander function as ctypes callback function
+        if not hasattr(self, '_record_handler') or (self._record_handler != handler):
+            self._record_handler = handler
+
+            RECORD_HANDLER = ct.CFUNCTYPE(None, ct.POINTER(ct.c_char), ct.c_int, ct.c_void_p)
+            self._ctypes_record_handler = RECORD_HANDLER(self._record_handler_wrapper)
+
+        self._record_handler_data = handlerdata
 
         pack_flags = ct.c_uint32(0)
         packed_samples = ct.c_int64(0)
 
-        if flush_data:
-            pack_flags.value |= MSF_FLUSHDATA.value
+        # Always flush data when packing
+        pack_flags.value |= MSF_FLUSHDATA.value
 
         if datasamples is not None:
             msr_datasamples = self._datasamples

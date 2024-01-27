@@ -51,11 +51,9 @@ def test_msrecord_pack():
     assert msr.extra == '{"FDSN":{"Time":{"Quality":80}}}'
 
     # Test packing of an miniSEED v3 record
-    msr.set_record_handler(record_handler, None)
-
-    (packed_samples, packed_records) = msr.pack(datasamples=sine_500,
-                                                sampletype='i',
-                                                flush_data=True)
+    (packed_samples, packed_records) = msr.pack(record_handler,
+                                                datasamples=sine_500,
+                                                sampletype='i')
 
     assert packed_samples == 500
     assert packed_records == 1
@@ -68,9 +66,9 @@ def test_msrecord_pack():
     # Test packing of an miniSEED v2 record
     msr.formatversion = 2
 
-    (packed_samples, packed_records) = msr.pack(datasamples=sine_500,
-                                                sampletype='i',
-                                                flush_data=True)
+    (packed_samples, packed_records) = msr.pack(record_handler,
+                                                datasamples=sine_500,
+                                                sampletype='i')
 
     assert packed_samples == 500
     assert packed_records == 1
