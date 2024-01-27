@@ -69,5 +69,5 @@ for traceid in mstl.traceids():
         traces.append(trace)
 
 # Pretty print the trace list
-pp = pprint.PrettyPrinter(indent=4)
+pp = pprint.PrettyPrinter(indent=4, sort_dicts=False)
 pp.pprint(traces)
