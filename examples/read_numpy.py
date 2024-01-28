@@ -9,7 +9,7 @@
 # structure is for illustration only, and would like need
 # adaptation for a real application.
 #
-# This file is part of the mseedlib module.
+# This file is part of the Python mseedlib module.
 # Copywrite (c) 2024, EarthScope Data Services
 
 import os
