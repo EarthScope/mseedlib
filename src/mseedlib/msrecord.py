@@ -20,7 +20,7 @@ class MS3Record(ct.Structure):
                 ('_samplecnt',     ct.c_int64),   # Number of samples in record
                 ('_crc',           ct.c_uint32),  # CRC of entire record
                 ('_extralength',   ct.c_uint16),  # Length of extra headers in bytes
-                ('_datalength',    ct.c_uint32),  # Length of data payload in bytes
+                ('_datalength',    ct.c_uint32),  # Length of datasamples buffer in bytes
                 ('_extra',         ct.c_char_p),  # Pointer to extra headers (JSON)
                 ('_datasamples',   ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
                 ('_datasize',      ct.c_uint64),  # Size of datasamples buffer in bytes
@@ -34,6 +34,14 @@ class MS3Record(ct.Structure):
                 f'{self.samplecnt} samples, '
                 f'{self.samprate} Hz, '
                 f'{self.starttime_str()}')
+
+    @property
+    def record(self) -> bytes:
+        '''Return raw, parsed miniSEED record as bytes'''
+        if not self._record:
+            raise ValueError("No raw record available")
+
+        return self._record[:self._reclen]
 
     @property
     def reclen(self) -> int:

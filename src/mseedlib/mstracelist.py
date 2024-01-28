@@ -64,8 +64,7 @@ class MS3TraceSeg(ct.Structure):
         return (f'start: {self.starttime_str()}, '
                 f'end: {self.endtime_str()}, '
                 f'samprate: {self.samprate}, '
-                f'samples: {self.numsamples}, '
-                f'type: {self.sampletype} ')
+                f'samples: {self.samplecnt} ')
 
     @property
     def starttime_seconds(self) -> float:
