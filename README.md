@@ -16,7 +16,7 @@ The package does not depend on anything other than the Python standard library.
 ## Example usage
 
 Working programs for a variety of use cases ca be found in the
-[examples](https://github.com/EarthScope/mseedlib/examples/) directory of the repository.
+[examples](https://github.com/EarthScope/mseedlib/tree/main/examples) directory of the repository.
 
 Read a file and print details from each record:
 ```Python
