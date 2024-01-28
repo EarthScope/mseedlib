@@ -15,7 +15,85 @@ The package does not depend on anything other than the Python standard library.
 
 ## Example usage
 
-TODO
+Working programs for a variety of use cases ca be found in the
+[examples](https://github.com/EarthScope/mseedlib/examples/) directory of the repository.
+
+Read a file and print details from each record:
+```Python
+from mseedlib import MS3RecordReader,TimeFormat
+
+with MS3RecordReader('testdata-3channel-signal.mseed3') as msreader:
+    for msr in msreader:
+        # Print values directly
+        print(f'   SourceID: {msr.sourceid}, record length {msr.reclen}')
+        print(f' Start Time: {msr.starttime_str(timeformat=TimeFormat.ISOMONTHDAY_SPACE_Z)}')
+        print(f'    Samples: {msr.samplecnt}')
+
+        # Alternatively, use the library print function
+        msr.print()
+```
+
+Read a file into a trace list and print the list:
+```Python
+from mseedlib import MSTraceList
+
+mstl = MSTraceList('testdata-3channel-signal.mseed3')
+
+# Print the trace list using the library print function
+mstl.print(details=1, gaps=True)
+
+# Alternatively, traverse the data structures and print each trace ID and segment
+for traceid in mstl.traceids():
+    print(traceid)
+
+    for segment in traceid.segments():
+        print('  ', segment)
+```
+
+Writing miniSEED requires specifying a "record handler" function that is
+a callback to consume, and do whatever you want, with generated records.
+
+Simple example of writing multiple channels of data:
+```Python
+import math
+from mseedlib import MSTraceList, timestr2nstime
+
+# Generate synthetic sinusoid data, starting at 9, 45, and 90 degrees
+data0 = list(map(lambda x: int(math.sin(math.radians(0)) * 500), range(0, 500)))
+data1 = list(map(lambda x: int(math.sin(math.radians(45)) * 500), range(45, 500 + 45)))
+data2 = list(map(lambda x: int(math.sin(math.radians(90)) * 500), range(90, 500 + 90)))
+
+mstl = MSTraceList()
+
+sample_rate = 40.0
+start_time = timestr2nstime("2024-01-01T15:13:55.123456789Z")
+format_version = 2
+record_length = 512
+
+# Add synthetic data to the trace list
+mstl.add_data(sourceid="FDSN:XX_TEST__B_S_0",
+              data_samples=data0, sample_type='i',
+              sample_rate=sample_rate, start_time=start_time)
+
+mstl.add_data(sourceid="FDSN:XX_TEST__B_S_0",
+              data_samples=data1, sample_type='i',
+              sample_rate=sample_rate, start_time=start_time)
+
+mstl.add_data(sourceid="FDSN:XX_TEST__B_S_0",
+              data_samples=data2, sample_type='i',
+              sample_rate=sample_rate, start_time=start_time)
+
+# Record handler called for each generated record
+def record_handler(record, handler_data):
+    handler_data['fh'].write(record)
+
+file_handle = open('output.mseed', 'wb')
+
+# Generate miniSEED records
+mstl.pack(record_handler,
+          {'fh':file_handle},
+          flush_data=True)
+```
 
 ## Package design rationale
 
