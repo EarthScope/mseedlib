@@ -45,7 +45,7 @@ class CustomBuildHook(BuildHookInterface):
                     os.path.join(self.package_path))
 
     def clean(self, versions):
-        if sys.platform.lower().startswith("windows"):
+        if sys.platform.lower().startswith("win"):
             cmd = f"pushd {self.libmseed_path} && nmake /f Makefile.win clean & popd"
         else:
             cmd = f"make -C {self.libmseed_path} clean"
