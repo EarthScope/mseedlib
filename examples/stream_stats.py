@@ -15,6 +15,8 @@ from mseedlib import MS3RecordReader, nstime2timestr
 # Container for trace stats
 trace_stats = {}
 
+print("Reading miniSEED from stdin, writing to stdout", file=sys.stderr)
+
 # Read miniSEED from stdin
 with MS3RecordReader(sys.stdin.fileno()) as msreader:
     for msr in msreader:
