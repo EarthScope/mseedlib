@@ -1,7 +1,9 @@
 name: BuildWheels
 
-# on: [push, pull_request]
-on: [release, workflow_dispatch]
+on:
+  release:
+    types: [published] # Trigger on release publishing
+  workflow_dispatch:   # Trigger on manual run
 
 jobs:
   build_wheels:
