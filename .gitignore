@@ -27,7 +27,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Development environment
-dev/
+venv/
 src/mseedlib/libmseed.h
 
 # Sphinx documentation
