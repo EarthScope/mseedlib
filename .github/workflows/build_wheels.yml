@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1 # Adding for Windows nmake
+      - uses: ilammy/msvc-dev-cmd@v1 # Adding for MSVC nmake
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
@@ -25,11 +25,15 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.18.1
         env:
-          # Skip older python's to prvent things like: https://github.com/pypa/cibuildwheel/issues/1828
-          CIBW_SKIP: cp36-* cp37-* cp38-* 
-          
+          # Skip older python's to prevent things like: https://github.com/pypa/cibuildwheel/issues/1828
+          CIBW_SKIP: cp36-* cp37-* cp38-*
+
           # Specify additional architectures using emulation
           CIBW_ARCHS_LINUX: auto aarch64
+
+          # Run tests with pytest
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest {project}/tests"
         with:
           package-dir: .
           output-dir: wheelhouse
