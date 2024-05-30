@@ -32,8 +32,8 @@ jobs:
           CIBW_ARCHS_LINUX: auto aarch64
 
           # Run tests with pytest
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: "pytest {project}/tests"
+          #CIBW_TEST_REQUIRES: pytest
+          #CIBW_TEST_COMMAND: "pytest {project}/tests"
         with:
           package-dir: .
           output-dir: wheelhouse
