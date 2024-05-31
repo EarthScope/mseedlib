@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
           CIBW_SKIP: cp36-* cp37-* cp38-*
 
           # Build separate wheels for macOS's different architectures.
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_MACOS: x86_64 arm64
 
           # Specify additional architectures using emulation
           CIBW_ARCHS_LINUX: auto aarch64
@@ -39,6 +39,9 @@ jobs:
           # Run tests with pytest
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
+          # Will avoid testing on emulated architectures, fix when GitHub Actions supports aarch64
+          CIBW_TEST_SKIP: "*-*linux_aarch64"
+
         with:
           package-dir: .
           output-dir: wheelhouse
