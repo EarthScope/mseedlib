@@ -1,4 +1,4 @@
-name: Build and upload releases to PyPI
+name: BuildRelease
 
 on:
   workflow_dispatch: # Trigger on manual run

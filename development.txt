@@ -42,4 +42,4 @@ python3 -m twine upload dist/*
 hatch clean
 
 ## Triggering GitHub Actions using GH CLI
-gh workflow run BuildWheels --ref <branch>
+gh workflow run BuildRelease --ref <branch>
