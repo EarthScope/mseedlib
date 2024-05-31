@@ -30,9 +30,6 @@ jobs:
           # Skip older python's to prevent things like: https://github.com/pypa/cibuildwheel/issues/1828
           CIBW_SKIP: cp36-* cp37-* cp38-*
 
-          # Build separate wheels for macOS's different architectures.
-          CIBW_ARCHS_MACOS: x86_64 arm64
-
           # Specify additional architectures using emulation
           CIBW_ARCHS_LINUX: auto aarch64
 
