@@ -22,7 +22,9 @@ Read a file and print details from each record:
 ```Python
 from mseedlib import MS3RecordReader,TimeFormat
 
-with MS3RecordReader('testdata-3channel-signal.mseed3') as msreader:
+input_file = 'testdata-3channel-signal.mseed3'
+
+with MS3RecordReader(input_file) as msreader:
     for msr in msreader:
         # Print values directly
         print(f'   SourceID: {msr.sourceid}, record length {msr.reclen}')
@@ -37,7 +39,9 @@ Read a file into a trace list and print the list:
 ```Python
 from mseedlib import MSTraceList
 
-mstl = MSTraceList('testdata-3channel-signal.mseed3')
+input_file = 'testdata-3channel-signal.mseed3'
+
+mstl = MSTraceList(input_file)
 
 # Print the trace list using the library print function
 mstl.print(details=1, gaps=True)
@@ -87,12 +91,13 @@ mstl.add_data(sourceid="FDSN:XX_TEST__B_S_0",
 def record_handler(record, handler_data):
     handler_data['fh'].write(record)
 
-file_handle = open('output.mseed', 'wb')
+output_file = 'output.mseed'
 
-# Generate miniSEED records
-mstl.pack(record_handler,
-          {'fh':file_handle},
-          flush_data=True)
+with open(output_file, 'wb') as file_handle:
+  # Generate miniSEED records
+  mstl.pack(record_handler,
+            {'fh':file_handle},
+            flush_data=True)
 ```
 
 ## Package design rationale
