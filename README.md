@@ -59,9 +59,9 @@ import math
 from mseedlib import MSTraceList, timestr2nstime
 
 # Generate synthetic sinusoid data, starting at 0, 45, and 90 degrees
-data0 = list(map(lambda x: int(math.sin(math.radians(0)) * 500), range(0, 500)))
-data1 = list(map(lambda x: int(math.sin(math.radians(45)) * 500), range(45, 500 + 45)))
-data2 = list(map(lambda x: int(math.sin(math.radians(90)) * 500), range(90, 500 + 90)))
+data0 = list(map(lambda x: int(math.sin(math.radians(x)) * 500), range(0, 500)))
+data1 = list(map(lambda x: int(math.sin(math.radians(x)) * 500), range(45, 500 + 45)))
+data2 = list(map(lambda x: int(math.sin(math.radians(x)) * 500), range(90, 500 + 90)))
 
 mstl = MSTraceList()
 
