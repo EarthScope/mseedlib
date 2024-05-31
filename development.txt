@@ -1,4 +1,4 @@
-Commands needed for setting up a development environment, building wheels, 
+Commands needed for setting up a development environment, building wheels,
 and uploading to PyPI
 
 # Development environment
@@ -37,3 +37,6 @@ python3 -m build
 ## Test and upload to PyPI
 python3 -m twine check --strict dist/*
 python3 -m twine upload dist/*
+
+## To clean a build (requires hatch)
+hatch clean

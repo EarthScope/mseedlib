@@ -36,8 +36,10 @@ jobs:
           # Run tests with pytest
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
-          # Will avoid testing on emulated architectures, fix when GitHub Actions supports aarch64
-          CIBW_TEST_SKIP: "*-*linux_aarch64"
+
+          # Skip test: aarch64 on linux for now (emulated), fix when GitHub Actions supports aarch64
+          # Skip test: 32-bit windows, will not work with pytest on 64-bit python
+          CIBW_TEST_SKIP: "*-*linux_aarch64 *win_x86"
 
         with:
           package-dir: .
