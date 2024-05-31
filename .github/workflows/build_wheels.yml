@@ -39,7 +39,7 @@ jobs:
 
           # Skip test: aarch64 on linux for now (emulated), fix when GitHub Actions supports aarch64
           # Skip test: 32-bit windows, will not work with pytest on 64-bit python
-          CIBW_TEST_SKIP: "*-*linux_aarch64 *win_x86"
+          CIBW_TEST_SKIP: "*-*linux_aarch64 *win32"
 
         with:
           package-dir: .
