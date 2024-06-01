@@ -147,7 +147,7 @@ class MS3TraceSeg(ct.Structure):
             raise ValueError("No sample type available")
 
     @property
-    def sample_size_type(self) -> (int, str):
+    def sample_size_type(self) -> tuple[int, str]:
         '''Return data sample size and type code from first record in list'''
         sample_size = ct.c_uint8(0)
         sample_type = ct.c_char(0)
@@ -155,7 +155,7 @@ class MS3TraceSeg(ct.Structure):
         if self.recordlist is None:
             raise ValueError("No record list available to determine sample size and type")
 
-        # Determine
+        # Determine sample size and type from the first record in the list
         status = ms_encoding_sizetype(self.recordlist._first.contents._msr.contents.encoding,
                                       ct.byref(sample_size),
                                       ct.byref(sample_type))
@@ -200,11 +200,11 @@ MS3TraceSeg._fields_ = [('starttime',    ct.c_int64),   # Time of first sample
                         ('_datasamples', ct.c_void_p),  # Data samples, 'numsamples' of type 'sampletype'
                         ('datasize',     ct.c_uint64),  # Size of datasamples buffer in bytes
                         ('numsamples',   ct.c_int64),   # Number of data samples in 'datasamples'
-                        ('_sampletype',  ct.c_char),   # Sample type code: t (text), i (int32) , f (float), d (double)
+                        ('_sampletype',  ct.c_char),    # Sample type code: t (text), i (int32) , f (float), d (double)
                         ('_prvtptr',     ct.c_void_p),  # Private pointer, in this code: pointer to trace ID
-                        ('_recordlist',  ct.POINTER(MS3RecordList)),  # Pointer to list of records for trace segment
-                        ('_prev',        ct.POINTER(MS3TraceSeg)),  # Pointer to previous trace segment
-                        ('_next',        ct.POINTER(MS3TraceSeg))]  # Pointer to next trace segment, NULL if last
+                        ('_recordlist',  ct.POINTER(MS3RecordList)), # Pointer to list of records for trace segment
+                        ('_prev',        ct.POINTER(MS3TraceSeg)),   # Pointer to previous trace segment
+                        ('_next',        ct.POINTER(MS3TraceSeg))]   # Pointer to next trace segment, NULL if last
 
 
 class MS3TraceID(ct.Structure):
@@ -259,18 +259,18 @@ MS3TraceID._fields_ = [('sid',         ct.c_char * LM_SIDLEN),  # Source identif
                        ('pubversion',  ct.c_uint8),  # Publication version
                        ('earliest',    ct.c_int64),  # Time of earliest sample
                        ('latest',      ct.c_int64),  # Time of lastest sample
-                       ('_prvtptr',    ct.c_void_p),  # Private pointer for general use, unused by library
-                       ('numsegments', ct.c_uint32),  # Number of trace segments
+                       ('_prvtptr',    ct.c_void_p), # Private pointer for general use, unused by library
+                       ('numsegments', ct.c_uint32), # Number of trace segments
                        ('_first',      ct.POINTER(MS3TraceSeg)),  # Pointer to first of list of segments
                        ('_last',       ct.POINTER(MS3TraceSeg)),  # Pointer to last of list of segments
                        ('_next',       ct.POINTER(MS3TraceID) * MSTRACEID_SKIPLIST_HEIGHT),
-                       ('_height',     ct.c_uint8)]    # Height of skip list at 'next'
+                       ('_height',     ct.c_uint8)]  # Height of skip list at 'next'
 
 
 class MS3TraceList(ct.Structure):
     """Structure to hold a trace list"""
     _fields_ = [('numtraceids', ct.c_uint32),  # Number of traces IDs in list
-                ('_traces',     MS3TraceID),  # Head node of trace skip list, first entry at \a traces.next[0]
+                ('_traces',     MS3TraceID),   # Head node of trace skip list, first entry at \a traces.next[0]
                 ('_prngstate',  ct.c_uint64)]  # INTERNAL: State for Pseudo RNG
 
 
@@ -535,7 +535,7 @@ class MSTraceList():
         Returns a tuple of (packed_samples, packed_records)
         '''
 
-        # Set hander function as ctypes callback function
+        # Set handler function as ctypes callback function
         if not hasattr(self, '_record_handler') or (self._record_handler != handler):
             self._record_handler = handler
 
