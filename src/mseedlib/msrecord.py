@@ -32,6 +32,31 @@ class MS3Record(ct.Structure):
         super().__init__(_reclen=reclen, _encoding=encoding, _samplecnt=samplecnt)
 
     def __repr__(self) -> str:
+        datasamples_str = '[]'
+        if self._numsamples > 0:
+          samples = self.datasamples
+          datasamples_str = str(samples[:5]) + ' ...' if len(samples) > 5 else str(samples)
+
+        return (f'MS3Record(sourceid: {self._sid}\n'
+                f'        pubversion: {self._pubversion}\n'
+                f'            reclen: {self._reclen}\n'
+                f'     formatversion: {self._formatversion}\n'
+                f'         starttime: {self._starttime} aka {self.starttime_str()}\n'
+                f'         samplecnt: {self._samplecnt}\n'
+                f'          samprate: {self._samprate}\n'
+                f'             flags: {self._flags} aka {self.flags_dict()}\n'
+                f'               CRC: {self._crc} aka {hex(self._crc)}\n'
+                f'          encoding: {self._encoding} aka {self.encoding_str()}\n'
+                f'       extralength: {self._extralength}\n'
+                f'        datalength: {self._datalength}\n'
+                f'             extra: {self._extra}\n'
+                f'        numsamples: {self._numsamples}\n'
+                f'       datasamples: {datasamples_str}\n' # Need to limit this to a few samples
+                f'          datasize: {self._datasize}\n'
+                f'        sampletype: {self._sampletype}\n'
+                f'    record pointer: {ct.c_void_p.from_buffer(self._record).value})')
+
+    def __str__(self) -> str:
         return (f'{self.sourceid}, '
                 f'{self.pubversion}, '
                 f'{self.reclen}, '
