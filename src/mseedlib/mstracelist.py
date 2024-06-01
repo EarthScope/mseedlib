@@ -499,7 +499,7 @@ class MSTraceList():
 
     def pack(self, handler, handlerdata=None, flush_data=True,
              record_length=4096, encoding=DataEncoding.STEIM1,
-             format_version=None, extra_headers=None, verbose=0) -> (int, int):
+             format_version=None, extra_headers=None, verbose=0) -> tuple[int, int]:
         '''Pack data into miniSEED record(s) and call `handler()`
 
         The `handler(record, handlerdata)` function must accept two arguments:
