@@ -1,5 +1,6 @@
 import ctypes as ct
 import json
+from typing import Optional
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .util import ms_nstime2timestr, ms_timestr2nstime, ms_encodingstr
@@ -42,19 +43,19 @@ class MS3Record(ct.Structure):
                 f'        pubversion: {self._pubversion}\n'
                 f'            reclen: {self._reclen}\n'
                 f'     formatversion: {self._formatversion}\n'
-                f'         starttime: {self._starttime} aka {self.starttime_str()}\n'
+                f'         starttime: {self._starttime} => {self.starttime_str()}\n'
                 f'         samplecnt: {self._samplecnt}\n'
                 f'          samprate: {self._samprate}\n'
-                f'             flags: {self._flags} aka {self.flags_dict()}\n'
-                f'               CRC: {self._crc} aka {hex(self._crc)}\n'
-                f'          encoding: {self._encoding} aka {self.encoding_str()}\n'
+                f'             flags: {self._flags} => {self.flags_dict()}\n'
+                f'               CRC: {self._crc} => {hex(self._crc)}\n'
+                f'          encoding: {self._encoding} => {self.encoding_str()}\n'
                 f'       extralength: {self._extralength}\n'
                 f'        datalength: {self._datalength}\n'
                 f'             extra: {self._extra}\n'
                 f'        numsamples: {self._numsamples}\n'
                 f'       datasamples: {datasamples_str}\n' # Need to limit this to a few samples
                 f'          datasize: {self._datasize}\n'
-                f'        sampletype: {self._sampletype}\n'
+                f'        sampletype: {self.sampletype} => {self.sampletype_str()}\n'
                 f'    record pointer: {ct.c_void_p.from_buffer(self._record).value})')
 
     def __str__(self) -> str:
@@ -335,9 +336,23 @@ class MS3Record(ct.Structure):
         return self._numsamples
 
     @property
-    def sampletype(self) -> str:
-        '''Return sample type code'''
-        return self._sampletype.decode(encoding='utf-8')
+    def sampletype(self) -> Optional[str]:
+        '''Return sample type code if available, otherwise None'''
+        return self._sampletype.decode(encoding='utf-8') if self._sampletype != b'\x00' else None
+
+    def sampletype_str(self) -> Optional[str]:
+        '''Return sample type as descriptive stringlet'''
+
+        if self._sampletype == b'i':
+            return "int32"
+        elif self._sampletype == b'f':
+            return "float32"
+        elif self._sampletype == b'd':
+            return "float64"
+        elif self._sampletype == b't':
+            return "text"
+        else:
+            return None
 
     @property
     def endtime(self) -> int:
