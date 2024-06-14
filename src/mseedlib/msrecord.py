@@ -1,4 +1,5 @@
 import ctypes as ct
+import json
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .util import ms_nstime2timestr, ms_timestr2nstime, ms_encodingstr
@@ -433,6 +434,19 @@ class MS3Record(ct.Structure):
             self._sampletype = bytes(sampletype, 'utf-8')
             self._numsamples = len_datasamples
             self._samplecnt = len_datasamples
+
+        # Retain miniSEED "sequence number" if parsed record is v2
+        if self.formatversion == 2 and self._record is not None:
+            sequence_string = self._record[0:6].decode('utf-8')
+            sequence_number = int(sequence_string)
+
+            if self.extralength > 0:
+                extra_headers = json.loads(self.extra)
+                extra_headers.setdefault('FDSN', {})['Sequence'] = sequence_number
+                self.extra = json.dumps(extra_headers, separators=(',', ':'))
+            else:
+                extra_headers = {'FDSN': {'Sequence': sequence_number}}
+                self.extra = json.dumps(extra_headers, separators=(',', ':'))
 
         packed_records = _msr3_pack(ct.byref(self), self._ctypes_record_handler, None,
                                     ct.byref(packed_samples), pack_flags, verbose)
