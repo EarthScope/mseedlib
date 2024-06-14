@@ -436,7 +436,8 @@ class MS3Record(ct.Structure):
             self._samplecnt = len_datasamples
 
         # Retain miniSEED "sequence number" if parsed record is v2
-        if self.formatversion == 2 and self._record is not None:
+        if self.formatversion == 2 and self._record:
+            # Extract sequence number from record, first 6 bytes are ASCII digits
             sequence_string = self._record[0:6].decode('utf-8')
             sequence_number = int(sequence_string)
 
