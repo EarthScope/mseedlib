@@ -7,7 +7,7 @@ from .exceptions import *
 
 
 class MS3Record(ct.Structure):
-    """A miniSEED record base class based on libmseed's MS3Record structure"""
+    """A miniSEED record base class mirroring libmseed's MS3Record structure"""
     _fields_ = [('_record',        ct.POINTER(ct.c_char)),  # Raw miniSEED record, if available
                 ('_reclen',        ct.c_int32),   # Length of miniSEED record in bytes
                 ('_swapflag',      ct.c_uint8),   # Byte swap indicator (bitmask)

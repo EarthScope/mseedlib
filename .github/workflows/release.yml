@@ -29,7 +29,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.18.1
         env:
           # Skip older python's to prevent things like: https://github.com/pypa/cibuildwheel/issues/1828
-          CIBW_SKIP: cp36-* cp37-* cp38-*
+          CIBW_SKIP: cp36-* cp37-* cp38-* pp38-*
 
           # Specify native archs ('auto') and additional architectures using emulation
           CIBW_ARCHS_LINUX: auto aarch64

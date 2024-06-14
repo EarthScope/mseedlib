@@ -9,7 +9,7 @@ authors = [
     { name = "EarthScope Data Services", email = "software@earthscope.org" },
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["seismology", "miniseed", "mseed", "data", "waveform", "seismic"]
 license = { text = "Apache-2.0" }
 classifiers = [
