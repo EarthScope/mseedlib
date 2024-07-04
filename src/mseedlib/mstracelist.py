@@ -1,4 +1,5 @@
 import ctypes as ct
+import time
 from typing import Any
 from .clib import clibmseed, wrap_function
 from .definitions import *
@@ -8,7 +9,7 @@ from .exceptions import *
 
 
 class MS3RecordPtr(ct.Structure):
-    '''Structure to hold a pointer to a miniSEED record'''
+    """Structure to hold a pointer to a miniSEED record"""
 
     def __repr__(self) -> str:
         return (f'Pointer to {self.msr.sourceid}, '
@@ -17,7 +18,7 @@ class MS3RecordPtr(ct.Structure):
 
     @property
     def msr(self) -> MS3Record:
-        '''Return a constructed MS3Record'''
+        """Return a constructed MS3Record"""
         if not hasattr(self, '_msrecord'):
             self._msrecord = self._msr.contents
 
@@ -31,18 +32,18 @@ MS3RecordPtr._fields_ = [('bufferptr', ct.c_char_p),
                          ('_msr', ct.POINTER(MS3Record)),
                          ('_endtime', ct.c_int64),
                          ('_dataoffset', ct.c_uint32),
-                         ('_prvtpr', ct.c_void_p),
+                         ('_prvtptr', ct.c_void_p),
                          ('_next', ct.POINTER(MS3RecordPtr))]
 
 
 class MS3RecordList(ct.Structure):
-    '''Structure to hold a list of MS3RecordPtr entries'''
+    """Structure to hold a list of MS3RecordPtr entries"""
 
     def __repr__(self) -> str:
         return (f'Record list of {self.recordcnt} records')
 
     def records(self) -> Any:
-        '''Return the records via a generator iterator'''
+        """Return the records via a generator iterator"""
         current_record = self._first
         while current_record:
             yield current_record.contents
@@ -54,17 +55,39 @@ MS3RecordList._fields_ = [('recordcnt', ct.c_uint64),
                           ('_last', ct.POINTER(MS3RecordPtr))]
 
 
+class TraceSegInfo(ct.Structure):
+    """Structure to hold trace segment information"""
+
+    def updated_str(self, timeformat=TimeFormat.ISOMONTHDAY_Z, subsecond=SubSecond.NANO_MICRO_NONE) -> str:
+        c_timestr = ct.create_string_buffer(40)
+
+        ms_nstime2timestr(self.updated, c_timestr, timeformat, subsecond)
+
+        return str(c_timestr.value, 'utf-8')
+
+TraceSegInfo._fields_ = [('traceid_address', ct.c_void_p),  # Address of parent trace ID
+                         ('updated', ct.c_int64)]   # Time of last segment update
+
+
 class MS3TraceSeg(ct.Structure):
     """Structure to hold a trace segment"""
-
-    def __init__(self) -> None:
-        super().__init__()
 
     def __repr__(self) -> str:
         return (f'start: {self.starttime_str()}, '
                 f'end: {self.endtime_str()}, '
                 f'samprate: {self.samprate}, '
                 f'samples: {self.samplecnt} ')
+
+    @property
+    def info(self) -> TraceSegInfo:
+        '''Return the trace segment information structure'''
+
+        if not self._prvtptr:
+            # Allocate structure and store at _prvtptr
+            raw_buffer = ct.create_string_buffer(ct.sizeof(TraceSegInfo))
+            self._prvtptr = ct.cast(raw_buffer, ct.POINTER(TraceSegInfo))
+
+        return self._prvtptr.contents
 
     @property
     def starttime_seconds(self) -> float:
@@ -181,7 +204,7 @@ class MS3TraceSeg(ct.Structure):
         if self._datasamples is not None:
             raise ValueError("Data samples already unpacked")
 
-        status = _mstl3_unpack_recordlist(ct.cast(self._prvtptr, ct.POINTER(MS3TraceID)),
+        status = _mstl3_unpack_recordlist(ct.cast(self.info.traceid_address, ct.POINTER(MS3TraceID)),
                                           ct.byref(self),
                                           buffer_pointer,
                                           buffer_bytes,
@@ -201,7 +224,7 @@ MS3TraceSeg._fields_ = [('starttime',    ct.c_int64),   # Time of first sample
                         ('datasize',     ct.c_uint64),  # Size of datasamples buffer in bytes
                         ('numsamples',   ct.c_int64),   # Number of data samples in 'datasamples'
                         ('_sampletype',  ct.c_char),    # Sample type code: t (text), i (int32) , f (float), d (double)
-                        ('_prvtptr',     ct.c_void_p),  # Private pointer, in this code: pointer to trace ID
+                        ('_prvtptr',     ct.POINTER(TraceSegInfo)),  # Private pointer, in this code: pointer TraceSegInfo
                         ('_recordlist',  ct.POINTER(MS3RecordList)), # Pointer to list of records for trace segment
                         ('_prev',        ct.POINTER(MS3TraceSeg)),   # Pointer to previous trace segment
                         ('_next',        ct.POINTER(MS3TraceSeg))]   # Pointer to next trace segment, NULL if last
@@ -221,8 +244,8 @@ class MS3TraceID(ct.Structure):
         '''Return the trace segment structures via a generator iterator'''
         current_segment = self._first
         while current_segment:
-            # Set the `prvtptr` to the address of this trace ID
-            current_segment.contents._prvtptr = ct.addressof(self)
+            # Store the address to this parent trace ID
+            current_segment.contents.info.traceid_address = ct.addressof(self)
             yield current_segment.contents
             current_segment = current_segment.contents._next
 
@@ -351,8 +374,14 @@ class MSTraceList():
 
     def __del__(self) -> None:
         '''Free memory allocated at the C level for this MSTraceList'''
-        _mstl3_free(ct.byref(self._mstl), 0)
-        self._mstl = None
+
+        # Disassociate the TraceSegInfo structures for segments
+        for traceid in self.traceids():
+            for segment in traceid.segments():
+                if segment._prvtptr:
+                    segment._prvtptr = None
+
+        _mstl3_free(self._mstl, 0)
 
     @property
     def numtraceids(self) -> int:
@@ -446,7 +475,6 @@ class MSTraceList():
             start_time_str:     date-time string
         '''
         msr = MS3Record()
-        seg = ct.c_void_p(0)
 
         if sample_type not in ['i', 'f', 'd', 't']:
             raise ValueError(f'Invalid sample type: {sample_type}')
@@ -483,10 +511,13 @@ class MSTraceList():
                                        ct.c_void_p)
 
         # Add the MS3Record to the trace list, setting auto-heal flag to 1 (true)
-        seg = _mstl3_addmsr_recordptr(self._mstl, ct.byref(msr), None, 0, 1, 0, None)
+        segptr = _mstl3_addmsr_recordptr(self._mstl, ct.byref(msr), None, 0, 1, 0, None)
 
-        if seg is None:
+        if segptr is None:
             raise MseedLibError(MS_GENERROR, f'Error adding data samples')
+
+        # Set the updated time to the current time
+        segptr.contents.info.updated = int(time.time() * NSTMODULUS + 0.5)
 
     def _record_handler_wrapper(self, record, record_length, handlerdata):
         '''Callback function for mstl3_pack()
