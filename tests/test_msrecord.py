@@ -24,6 +24,60 @@ def record_handler(record, handler_data):
     global record_buffer
     record_buffer = bytes(record)
 
+class TestMS3RecordSorting:
+    def test_same_time_different_subsource(self):
+        msr1 = MS3Record()
+        msr1.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+        msr1.sourceid = "FDSN:XX_TEST__B_S_X"
+
+        msr2 = MS3Record()
+        msr2.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+        msr2.sourceid = "FDSN:XX_TEST__B_S_Y"
+
+        assert msr1 < msr2, "Less than: Same time but different sourceid (subsource)"
+        assert msr1 <= msr2, "Less than: Same time but different sourceid (subsource)"
+        assert msr2 > msr1, "Less than: Same time but different sourceid (subsource)"
+        assert msr2 >= msr1, "Less than: Same time but different sourceid (subsource)"
+
+    def test_different_time_same_sourceid(self):
+        msr1 = MS3Record()
+        msr1.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+        msr1.sourceid = "FDSN:XX_TEST__B_S_X"
+
+        msr2 = MS3Record()
+        msr2.set_starttime_str("2023-01-02T01:02:04.123456789Z")  # 1 second later
+        msr2.sourceid = "FDSN:XX_TEST__B_S_X"
+
+        assert msr1 < msr2, "Less than: Different time but same sourceid"
+        assert msr1 <= msr2, "Less than equal: Different time but same sourceid"
+        assert msr2 > msr1, "Less than: Different time but same sourceid"
+        assert msr2 >= msr1, "Less than: Different time but same sourceid"
+
+    def test_empty_location_last(self):
+        msr1 = MS3Record()
+        msr1.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+        msr1.sourceid = "FDSN:XX_TEST_00_B_S_X"
+
+        msr2 = MS3Record()
+        msr2.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+        msr2.sourceid = "FDSN:XX_TEST_ZZ_B_S_Y"
+
+        msr3 = MS3Record()
+        msr3.set_starttime_str("2023-01-02T01:02:03.123456789Z")
+        msr3.sourceid = "FDSN:XX_TEST__B_S_Y"
+
+        assert (
+            msr1 < msr2 < msr3
+        ), "Less than: Same time but different sourceid (location)"
+        assert (
+            msr1 <= msr2 <= msr3
+        ), "Less than equal: Same time but different sourceid (location)"
+        assert (
+            msr3 > msr2 > msr1
+        ), "Greater than: Same time but different sourceid (location)"
+        assert (
+            msr3 >= msr2 >= msr1
+        ), "Greater than equal: Same time but different sourceid (location)"
 
 def test_msrecord_pack():
 
