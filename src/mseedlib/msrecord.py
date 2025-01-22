@@ -58,6 +58,18 @@ class MS3Record(ct.Structure):
                 f'        sampletype: {self.sampletype} => {self.sampletype_str()}\n'
                 f'    record pointer: {ct.c_void_p.from_buffer(self._record).value})')
 
+    def __lt__(self, obj):
+        return (self.sourceid, self.starttime) < (obj.sourceid, obj.starttime)
+
+    def __gt__(self, obj):
+        return (self.sourceid, self.starttime) > (obj.sourceid, obj.starttime)
+
+    def __le__(self, obj):
+        return (self.sourceid, self.starttime) <= (obj.sourceid, obj.starttime)
+
+    def __ge__(self, obj):
+        return (self.sourceid, self.starttime) >= (obj.sourceid, obj.starttime)
+
     def __str__(self) -> str:
         return (f'{self.sourceid}, '
                 f'{self.pubversion}, '
