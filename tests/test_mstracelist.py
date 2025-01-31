@@ -1,10 +1,17 @@
 import pytest
 import os
 import math
-from mseedlib import MSTraceList, TimeFormat, SubSecond, timestr2nstime, sampletime, MseedLibError
+from mseedlib import (
+    MSTraceList,
+    TimeFormat,
+    SubSecond,
+    timestr2nstime,
+    sampletime,
+    MseedLibError,
+)
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
-test_path3 = os.path.join(test_dir, 'data', 'testdata-COLA-signal.mseed3')
+test_path3 = os.path.join(test_dir, "data", "testdata-COLA-signal.mseed3")
 
 
 def test_tracelist_read():
@@ -12,12 +19,16 @@ def test_tracelist_read():
 
     assert mstl.numtraceids == 3
 
-    assert mstl.sourceids() == ['FDSN:IU_COLA_00_B_H_1', 'FDSN:IU_COLA_00_B_H_2', 'FDSN:IU_COLA_00_B_H_Z']
+    assert mstl.sourceids() == [
+        "FDSN:IU_COLA_00_B_H_1",
+        "FDSN:IU_COLA_00_B_H_2",
+        "FDSN:IU_COLA_00_B_H_Z",
+    ]
 
     # Fetch first traceID
     traceid = next(mstl.traceids())
 
-    assert traceid.sourceid == 'FDSN:IU_COLA_00_B_H_1'
+    assert traceid.sourceid == "FDSN:IU_COLA_00_B_H_1"
     assert traceid.pubversion == 4
     assert traceid.earliest == 1267253400019539000
     assert traceid.earliest_seconds == 1267253400.019539
@@ -34,7 +45,7 @@ def test_tracelist_read():
     assert segment.samprate == 20.0
     assert segment.samplecnt == 84000
     assert segment.numsamples == 84000
-    assert segment.sampletype == 'i'
+    assert segment.sampletype == "i"
 
     # Data sample array tests
     data = segment.datasamples
@@ -46,9 +57,9 @@ def test_tracelist_read():
     assert data[-6:] == [-929184, -928936, -928632, -928248, -927779, -927206]
 
     # Search for a specific TraceID
-    foundid = mstl.get_traceid('FDSN:IU_COLA_00_B_H_Z')
+    foundid = mstl.get_traceid("FDSN:IU_COLA_00_B_H_Z")
 
-    assert foundid.sourceid == 'FDSN:IU_COLA_00_B_H_Z'
+    assert foundid.sourceid == "FDSN:IU_COLA_00_B_H_Z"
     assert foundid.pubversion == 4
     assert foundid.earliest == 1267253400019539000
     assert foundid.earliest_seconds == 1267253400.019539
@@ -58,10 +69,24 @@ def test_tracelist_read():
     foundseg = next(foundid.segments())
 
     # Check first 6 samples
-    assert foundseg.datasamples[0:6] == [-231394, -231367, -231376, -231404, -231437, -231474]
+    assert foundseg.datasamples[0:6] == [
+        -231394,
+        -231367,
+        -231376,
+        -231404,
+        -231437,
+        -231474,
+    ]
 
     # Check last 6 samples
-    assert foundseg.datasamples[-6:] == [-165263, -162103, -159002, -155907, -152810, -149774]
+    assert foundseg.datasamples[-6:] == [
+        -165263,
+        -162103,
+        -159002,
+        -155907,
+        -152810,
+        -149774,
+    ]
 
 
 def test_tracelist_read_recordlist():
@@ -69,10 +94,14 @@ def test_tracelist_read_recordlist():
 
     assert mstl.numtraceids == 3
 
-    assert mstl.sourceids() == ['FDSN:IU_COLA_00_B_H_1', 'FDSN:IU_COLA_00_B_H_2', 'FDSN:IU_COLA_00_B_H_Z']
+    assert mstl.sourceids() == [
+        "FDSN:IU_COLA_00_B_H_1",
+        "FDSN:IU_COLA_00_B_H_2",
+        "FDSN:IU_COLA_00_B_H_Z",
+    ]
 
     # Search for a specific trace ID
-    foundid = mstl.get_traceid('FDSN:IU_COLA_00_B_H_Z')
+    foundid = mstl.get_traceid("FDSN:IU_COLA_00_B_H_Z")
 
     foundseg = next(foundid.segments())
 
@@ -84,37 +113,59 @@ def test_tracelist_read_recordlist():
     assert foundseg.numsamples == 84000
 
     # Check first 6 samples
-    assert foundseg.datasamples[0:6] == [-231394, -231367, -231376, -231404, -231437, -231474]
+    assert foundseg.datasamples[0:6] == [
+        -231394,
+        -231367,
+        -231376,
+        -231404,
+        -231437,
+        -231474,
+    ]
 
     # Check last 6 samples
-    assert foundseg.datasamples[-6:] == [-165263, -162103, -159002, -155907, -152810, -149774]
+    assert foundseg.datasamples[-6:] == [
+        -165263,
+        -162103,
+        -159002,
+        -155907,
+        -152810,
+        -149774,
+    ]
 
 
 # A sine wave generator
 def sine_generator(start_degree=0, yield_count=100, total=1000):
-    '''A generator returning a continuing sequence for a sine values.'''
+    """A generator returning a continuing sequence for a sine values."""
     generated = 0
     while generated < total:
         bite_size = min(yield_count, total - generated)
 
         # Yield a tuple of 3 lists of continuing sine values
-        yield list(map(lambda x: int(math.sin(math.radians(x)) * 500),
-                       range(start_degree, start_degree + bite_size)))
+        yield list(
+            map(
+                lambda x: int(math.sin(math.radians(x)) * 500),
+                range(start_degree, start_degree + bite_size),
+            )
+        )
 
         start_degree += bite_size
         generated += bite_size
 
+
 # A global record buffer
 record_buffer = bytearray()
 
+
 def record_handler(record, handler_data):
-    '''A callback function for MSTraceList.set_record_handler()
+    """A callback function for MSTraceList.set_record_handler()
     Adds the record to a global buffer for testing
-    '''
+    """
     global record_buffer
     record_buffer.extend(bytes(record))
 
-test_pack3 = os.path.join(test_dir, 'data', 'packtest_sine2000.mseed3')
+
+test_pack3 = os.path.join(test_dir, "data", "packtest_sine2000.mseed3")
+
 
 def test_mstracelist_pack():
     # Create a new MSTraceList object
@@ -129,23 +180,29 @@ def test_mstracelist_pack():
 
     for new_data in sine_generator(yield_count=100, total=2000):
 
-        mstl.add_data(sourceid="FDSN:XX_TEST__B_S_X",
-                    data_samples=new_data, sample_type='i', sample_rate=sample_rate,
-                    start_time=start_time)
+        mstl.add_data(
+            sourceid="FDSN:XX_TEST__B_S_X",
+            data_samples=new_data,
+            sample_type="i",
+            sample_rate=sample_rate,
+            start_time=start_time,
+        )
 
         start_time = sampletime(start_time, len(new_data), sample_rate)
 
-        (packed_samples, packed_records) = mstl.pack(record_handler,
-                                                     flush_data=False,
-                                                     format_version=format_version,
-                                                     record_length=record_length)
+        (packed_samples, packed_records) = mstl.pack(
+            record_handler,
+            flush_data=False,
+            format_version=format_version,
+            record_length=record_length,
+        )
 
         total_samples += packed_samples
         total_records += packed_records
 
-    (packed_samples, packed_records) = mstl.pack(record_handler,
-                                                 format_version=format_version,
-                                                 record_length=record_length)
+    (packed_samples, packed_records) = mstl.pack(
+        record_handler, format_version=format_version, record_length=record_length
+    )
 
     total_samples += packed_samples
     total_records += packed_records
@@ -153,9 +210,9 @@ def test_mstracelist_pack():
     assert total_samples == 2000
     assert total_records == 5
 
-    with open(test_pack3, 'rb') as f:
+    with open(test_pack3, "rb") as f:
         data_v3 = f.read()
-        assert (record_buffer == data_v3)
+        assert record_buffer == data_v3
 
 
 def test_mstracelist_nosuchfile():
