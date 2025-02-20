@@ -149,13 +149,6 @@ class MS3TraceSeg(ct.Structure):
 
             data_samples = MS3TraceSeg.datasamples[:]
 
-        The array can efficiently be copied to a _numpy array_ using:
-
-            # Translate libmseed sample type to numpy type
-            nptype = {'i': numpy.int32, 'f': numpy.float32, 'd': numpy.float64, 't': numpy.char}
-
-            numpy.frombuffer(MS3TraceSeg.datasamples, dtype=nptype[MS3TraceSeg.sampletype])
-
         *NOTE* These data are owned by the this object instance and will be freed
         when the instance is destroyed.  If you wish to keep the data, you must
         make a copy.
@@ -241,6 +234,33 @@ class MS3TraceSeg(ct.Structure):
             raise MseedLibError(MS_GENERROR, f"Error unpacking data samples")
         else:
             return status
+
+    @property
+    def np_datasamples(self) -> Any:
+        """Return data samples as a numpy array"""
+        import numpy as np  # lazy import
+
+        if self.recordlist is None:
+            raise ValueError(
+                "Record list required for numpy use record_list=True on MSTraceList creation"
+            )
+
+        nptype = {"i": np.int32, "f": np.float32, "d": np.float64, "t": np.char}
+
+        (_, sample_type) = self.sample_size_type
+
+        dtype = nptype[sample_type]
+
+        # Allocate NumPy array for data samples
+        data_samples = np.zeros(self.samplecnt, dtype=dtype)
+
+        # Unpack data samples into allocated NumPy array
+        self.unpack_recordlist(
+            buffer_pointer=np.ctypeslib.as_ctypes(data_samples),
+            buffer_bytes=data_samples.nbytes,
+        )
+
+        return data_samples
 
 
 MS3TraceSeg._fields_ = [

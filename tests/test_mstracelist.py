@@ -89,6 +89,73 @@ def test_tracelist_read():
     ]
 
 
+def test_tracelist_numpy():
+    pytest.importorskip("numpy")
+    import numpy as np
+
+    with pytest.raises(ValueError):
+        # Must specify unpack_data=True
+        mstl = MSTraceList(test_path3)
+        traceid = next(mstl.traceids())
+        segment = next(traceid.segments())
+        np_data = segment.np_datasamples
+
+    mstl = MSTraceList(test_path3, record_list=True)
+
+    # Fetch first traceID
+    traceid = next(mstl.traceids())
+
+    # Fetch first trace segment
+    segment = next(traceid.segments())
+
+    # Data sample array tests
+    np_data = segment.np_datasamples
+
+    # FIXME add assert for int type
+
+    # Check first 6 samples
+    assert np.all(
+        np_data[0:6] == [-502916, -502808, -502691, -502567, -502433, -502331]
+    )
+
+    # Check last 6 samples
+    assert np.all(
+        np_data[-6:] == [-929184, -928936, -928632, -928248, -927779, -927206]
+    )
+
+    # Search for a specific TraceID
+    foundid = mstl.get_traceid("FDSN:IU_COLA_00_B_H_Z")
+
+    assert foundid.sourceid == "FDSN:IU_COLA_00_B_H_Z"
+    foundseg = next(foundid.segments())
+
+    # Check first 6 samples
+    assert np.all(
+        foundseg.np_datasamples[0:6]
+        == [
+            -231394,
+            -231367,
+            -231376,
+            -231404,
+            -231437,
+            -231474,
+        ]
+    )
+
+    # Check last 6 samples
+    assert np.all(
+        foundseg.np_datasamples[-6:]
+        == [
+            -165263,
+            -162103,
+            -159002,
+            -155907,
+            -152810,
+            -149774,
+        ]
+    )
+
+
 def test_tracelist_read_recordlist():
     mstl = MSTraceList(test_path3, unpack_data=False, record_list=True)
 

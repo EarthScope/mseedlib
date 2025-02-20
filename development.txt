@@ -10,7 +10,7 @@ python3 -m venv venv
 source ./venv/bin/activate
 
 ## Install the module locally using the source in-place
-python3 -m pip install --editable .[dev]
+python3 -m pip install --editable .[dev, numpy]
 
 # Testing
 
