@@ -90,8 +90,7 @@ def test_tracelist_read():
 
 
 def test_tracelist_numpy():
-    pytest.importorskip("numpy")
-    import numpy as np
+    np = pytest.importorskip("numpy")
 
     with pytest.raises(ValueError):
         # Must specify unpack_data=True

@@ -1,6 +1,6 @@
 import ctypes as ct
 import json
-from typing import Optional
+from typing import Optional, Any
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .util import ms_nstime2timestr, ms_timestr2nstime, ms_encodingstr
@@ -328,13 +328,6 @@ class MS3Record(ct.Structure):
 
             data_samples = MS3Record.datasamples[:]
 
-        The array can efficiently be copied to a _numpy array_ using:
-
-            # Translate libmseed sample type to numpy type
-            nptype = {'i': numpy.int32, 'f': numpy.float32, 'd': numpy.float64, 't': numpy.char}
-
-            numpy.frombuffer(MS3Record.datasamples, dtype=nptype[MS3Record.sampletype])
-
         *NOTE* These data are owned by the this object instance and will be freed
         when the instance is destroyed.  If you wish to keep the data, you must
         make a copy.
@@ -360,6 +353,30 @@ class MS3Record(ct.Structure):
             ).contents
         else:
             raise ValueError(f"Unknown sample type: {self.sampletype}")
+
+    @property
+    def np_datasamples(self) -> Any:
+        """Return data samples as a numpy array"""
+        if self.numsamples <= 0:
+            raise ValueError("No decoded samples available")
+
+        try:
+            import numpy as np  # lazy import
+        except ImportError:
+            raise ImportError(
+                "numpy is not installed.  Install lib with [numpy] optional dependency"
+            )
+
+        # Translate libmseed sample type to numpy type
+        nptype = {
+            "i": np.int32,
+            "f": np.float32,
+            "d": np.float64,
+            "t": np.char,
+        }
+
+        arr = np.frombuffer(self.datasamples, dtype=nptype[self.sampletype])
+        return arr
 
     @property
     def datasize(self) -> int:

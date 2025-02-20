@@ -15,7 +15,6 @@
 import os
 import sys
 import pprint
-import numpy as np
 from mseedlib import MSTraceList, sourceid2nslc
 
 input_files = []
@@ -32,9 +31,6 @@ if not input_files:
 
 # List of dictionaries for each trace
 traces = []
-
-# Translate libmseed sample type to numpy type
-nptype = {"i": np.int32, "f": np.float32, "d": np.float64, "t": np.char}
 
 mstl = MSTraceList()
 

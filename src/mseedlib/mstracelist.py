@@ -238,7 +238,12 @@ class MS3TraceSeg(ct.Structure):
     @property
     def np_datasamples(self) -> Any:
         """Return data samples as a numpy array"""
-        import numpy as np  # lazy import
+        try:
+            import numpy as np  # lazy import
+        except ImportError:
+            raise ImportError(
+                "numpy is not installed.  Install lib with [numpy] optional dependency"
+            )
 
         if self.recordlist is None:
             raise ValueError(
