@@ -31,10 +31,11 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
+    "pytest==8.3.4",
+    "black==25.1.0",
 ]
 numpy = [
-    "numpy",
+    "numpy==2.0.2",
 ]
 
 [project.urls]

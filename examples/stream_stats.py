@@ -23,33 +23,33 @@ with MS3RecordReader(sys.stdin.fileno()) as msreader:
 
         stats = trace_stats.setdefault(msr.sourceid, defaultdict(int))
 
-        stats['record_count'] += 1
-        stats['sample_count'] += msr.samplecnt
-        stats['bytes'] += msr.reclen
+        stats["record_count"] += 1
+        stats["sample_count"] += msr.samplecnt
+        stats["bytes"] += msr.reclen
 
         # Track publication versions
-        if msr.pubversion not in stats.setdefault('pubversions', []):
-            stats['pubversions'].append(msr.pubversion)
+        if msr.pubversion not in stats.setdefault("pubversions", []):
+            stats["pubversions"].append(msr.pubversion)
 
         # Track format versions
-        if msr.formatversion not in stats.setdefault('formatversions', []):
-            stats['formatversions'].append(msr.formatversion)
+        if msr.formatversion not in stats.setdefault("formatversions", []):
+            stats["formatversions"].append(msr.formatversion)
 
         # Track earliest sample time
-        if 'earliest' not in stats or msr.starttime > stats['earliest']:
-            stats['earliest'] = msr.starttime
+        if "earliest" not in stats or msr.starttime > stats["earliest"]:
+            stats["earliest"] = msr.starttime
 
         # Track latest sample time
-        if 'latest' not in stats or msr.endtime > stats['latest']:
-            stats['latest'] = msr.endtime
+        if "latest" not in stats or msr.endtime > stats["latest"]:
+            stats["latest"] = msr.endtime
 
         # Write raw miniSEED record to stdout
         sys.stdout.buffer.write(msr.record)
 
 # Traverse trace stats and add date-time string values for earliest and latest
 for stats in trace_stats.values():
-    stats['earliest_str'] = nstime2timestr(stats['earliest'])
-    stats['latest_str'] = nstime2timestr(stats['latest'])
+    stats["earliest_str"] = nstime2timestr(stats["earliest"])
+    stats["latest_str"] = nstime2timestr(stats["latest"])
 
 # Pretty print stats to stderr (to avoid mixing with stdout)
 pp = pprint.PrettyPrinter(stream=sys.stderr, indent=4, sort_dicts=False)

@@ -16,7 +16,7 @@ import argparse
 from mseedlib import MS3RecordReader, MS3RecordBufferReader, timestr2nstime
 
 # A global record buffer for repacked records
-record_buffer = b''
+record_buffer = b""
 
 
 def process_stream(args):
@@ -40,8 +40,9 @@ def process_stream(args):
             repacked_record = None
 
             # Trim record to selection time range if it contains selection times
-            if ((args.earliest and msr.starttime < args.earliest <= msr.endtime) or
-                    (args.latest and msr.starttime <= args.latest < msr.endtime)):
+            if (args.earliest and msr.starttime < args.earliest <= msr.endtime) or (
+                args.latest and msr.starttime <= args.latest < msr.endtime
+            ):
                 repacked_record = trim_record(msr, args.earliest, args.latest)
 
             # Write either repacked or orignal record to stdout
@@ -54,13 +55,13 @@ def process_stream(args):
 
 
 def record_handler(record, handler_data):
-    '''A callback function for MS3Record.set_record_handler()'''
+    """A callback function for MS3Record.set_record_handler()"""
     global record_buffer
     record_buffer = bytes(record)
 
 
 def trim_record(msr, earliest, latest):
-    '''Trim a miniSEED record to the specified start and end times'''
+    """Trim a miniSEED record to the specified start and end times"""
 
     # Cannot trim time coverage of a record with no coverage
     if msr.samplecnt == 0 and msr.samprate == 0.0:
@@ -102,19 +103,24 @@ def trim_record(msr, earliest, latest):
 
 
 def parse_timestr(timestr):
-    '''Helper for argparse to convert a time string to a nanosecond time value'''
+    """Helper for argparse to convert a time string to a nanosecond time value"""
     try:
         return timestr2nstime(timestr)
     except ValueError:
         raise argparse.ArgumentTypeError(f"Invalid time string: {timestr}")
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Streaming modifications of miniSEED')
-    parser.add_argument('--earliest', '-e', type=parse_timestr,
-                        help='Specify the earliest time to output')
-    parser.add_argument('--latest', '-l', type=parse_timestr,
-                        help='Specify the latest time to output')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Streaming modifications of miniSEED")
+    parser.add_argument(
+        "--earliest",
+        "-e",
+        type=parse_timestr,
+        help="Specify the earliest time to output",
+    )
+    parser.add_argument(
+        "--latest", "-l", type=parse_timestr, help="Specify the latest time to output"
+    )
 
     args = parser.parse_args()
 

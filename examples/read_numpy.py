@@ -34,7 +34,7 @@ if not input_files:
 traces = []
 
 # Translate libmseed sample type to numpy type
-nptype = {'i': np.int32, 'f': np.float32, 'd': np.float64, 't': np.char}
+nptype = {"i": np.int32, "f": np.float32, "d": np.float64, "t": np.char}
 
 mstl = MSTraceList()
 
@@ -54,17 +54,21 @@ for traceid in mstl.traceids():
         data_samples = np.zeros(segment.samplecnt, dtype=dtype)
 
         # Unpack data samples into allocated NumPy array
-        segment.unpack_recordlist(buffer_pointer=np.ctypeslib.as_ctypes(data_samples),
-                                  buffer_bytes=data_samples.nbytes)
+        segment.unpack_recordlist(
+            buffer_pointer=np.ctypeslib.as_ctypes(data_samples),
+            buffer_bytes=data_samples.nbytes,
+        )
 
         # Create a dictionary for the trace with basic metadata
-        trace = {'sourceid': traceid.sourceid,
-                 'NSLC': sourceid2nslc(traceid.sourceid),
-                 'publication_version': traceid.pubversion,
-                 'start_time': segment.starttime_str(),
-                 'end_time': segment.endtime_str(),
-                 'sample_rate': segment.samprate,
-                 'data_samples': data_samples}
+        trace = {
+            "sourceid": traceid.sourceid,
+            "NSLC": sourceid2nslc(traceid.sourceid),
+            "publication_version": traceid.pubversion,
+            "start_time": segment.starttime_str(),
+            "end_time": segment.endtime_str(),
+            "sample_rate": segment.samprate,
+            "data_samples": data_samples,
+        }
 
         traces.append(trace)
 

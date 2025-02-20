@@ -29,18 +29,22 @@
 import math
 from mseedlib import MSTraceList, timestr2nstime, sampletime
 
-output_file = 'output.mseed'
+output_file = "output.mseed"
 
 
 def sine_generator(start_degree=0, yield_count=100, total=1000):
-    '''A generator returning a continuing sequence for a sine values.'''
+    """A generator returning a continuing sequence for a sine values."""
     generated = 0
     while generated < total:
         bite_size = min(yield_count, total - generated)
 
         # Yield a tuple of 3 lists of continuing sine values
-        yield list(map(lambda x: int(math.sin(math.radians(x)) * 500),
-                       range(start_degree, start_degree + bite_size)))
+        yield list(
+            map(
+                lambda x: int(math.sin(math.radians(x)) * 500),
+                range(start_degree, start_degree + bite_size),
+            )
+        )
 
         start_degree += bite_size
         generated += bite_size
@@ -54,16 +58,16 @@ sine2 = sine_generator(start_degree=90, yield_count=generate_yield_count)
 
 
 def record_handler(buffer, handlerdata):
-    '''Write buffer to the file handle in handler data.
+    """Write buffer to the file handle in handler data.
 
     This callback function can be changed to do anything you want
     with the generated records.  For example, you could write them
     to a file, to a pipe, or send them over a network connection.
-    '''
+    """
     handlerdata["fh"].write(buffer)
 
 
-file_handle = open(output_file, 'wb')
+file_handle = open(output_file, "wb")
 
 mstl = MSTraceList()
 
@@ -81,40 +85,53 @@ record_length = 512
 for i in range(10):
 
     # Add new synthetic data to each trace using generators
-    mstl.add_data(sourceid="FDSN:XX_TEST__B_S_0",
-                  data_samples=next(sine0), sample_type='i',
-                  sample_rate=sample_rate,
-                  start_time=start_time)
+    mstl.add_data(
+        sourceid="FDSN:XX_TEST__B_S_0",
+        data_samples=next(sine0),
+        sample_type="i",
+        sample_rate=sample_rate,
+        start_time=start_time,
+    )
 
-    mstl.add_data(sourceid="FDSN:XX_TEST__B_S_1",
-                  data_samples=next(sine1), sample_type='i',
-                  sample_rate=sample_rate,
-                  start_time=start_time)
+    mstl.add_data(
+        sourceid="FDSN:XX_TEST__B_S_1",
+        data_samples=next(sine1),
+        sample_type="i",
+        sample_rate=sample_rate,
+        start_time=start_time,
+    )
 
-    mstl.add_data(sourceid="FDSN:XX_TEST__B_S_2",
-                  data_samples=next(sine2), sample_type='i',
-                  sample_rate=sample_rate,
-                  start_time=start_time)
+    mstl.add_data(
+        sourceid="FDSN:XX_TEST__B_S_2",
+        data_samples=next(sine2),
+        sample_type="i",
+        sample_rate=sample_rate,
+        start_time=start_time,
+    )
 
     # Update the start time for the next iteration of synthetic data
     start_time = sampletime(start_time, generate_yield_count, sample_rate)
 
     # Generate full records and do not flush the data biffers
-    (packed_samples, packed_records) = mstl.pack(record_handler,
-                                                 handlerdata={"fh": file_handle},
-                                                 format_version=format_version,
-                                                 record_length=record_length,
-                                                 flush_data=False)
+    (packed_samples, packed_records) = mstl.pack(
+        record_handler,
+        handlerdata={"fh": file_handle},
+        format_version=format_version,
+        record_length=record_length,
+        flush_data=False,
+    )
 
     total_samples += packed_samples
     total_records += packed_records
 
 # Flush the data buffers and write any data to records
-(packed_samples, packed_records) = mstl.pack(record_handler,
-                                             handlerdata={"fh": file_handle},
-                                             format_version=format_version,
-                                             record_length=record_length,
-                                             flush_data=True)
+(packed_samples, packed_records) = mstl.pack(
+    record_handler,
+    handlerdata={"fh": file_handle},
+    format_version=format_version,
+    record_length=record_length,
+    flush_data=True,
+)
 
 total_samples += packed_samples
 total_records += packed_records

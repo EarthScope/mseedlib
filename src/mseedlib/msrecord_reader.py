@@ -6,7 +6,7 @@ from .exceptions import *
 from .msrecord import MS3Record
 
 
-class MS3RecordReader():
+class MS3RecordReader:
     """Read miniSEED records from a file or file descriptor
 
     If `input` is an integer, it is assumed to be an open file descriptor,
@@ -23,8 +23,14 @@ class MS3RecordReader():
     internal integrity check of the record contents.
     """
 
-    def __init__(self, input, unpack_data=False, skip_not_data=False,
-                 validate_crc=True, verbose=0):
+    def __init__(
+        self,
+        input,
+        unpack_data=False,
+        skip_not_data=False,
+        validate_crc=True,
+        verbose=0,
+    ):
         super().__init__()
 
         self._msfp = ct.c_void_p(None)
@@ -42,28 +48,42 @@ class MS3RecordReader():
         if validate_crc:
             self.parse_flags.value |= MSF_VALIDATECRC.value
 
-        self.ms3_readmsr_selection = wrap_function(clibmseed, 'ms3_readmsr_selection', ct.c_int,
-                                                   [ct.POINTER(ct.c_void_p),
-                                                    ct.POINTER(ct.c_void_p),
-                                                    ct.c_char_p, ct.c_uint32, ct.c_void_p, ct.c_int8])
+        self.ms3_readmsr_selection = wrap_function(
+            clibmseed,
+            "ms3_readmsr_selection",
+            ct.c_int,
+            [
+                ct.POINTER(ct.c_void_p),
+                ct.POINTER(ct.c_void_p),
+                ct.c_char_p,
+                ct.c_uint32,
+                ct.c_void_p,
+                ct.c_int8,
+            ],
+        )
 
-        self.ms3_mstl_init_fd = wrap_function(clibmseed, 'ms3_mstl_init_fd', ct.c_void_p,
-                                              [ct.c_int])
+        self.ms3_mstl_init_fd = wrap_function(
+            clibmseed, "ms3_mstl_init_fd", ct.c_void_p, [ct.c_int]
+        )
 
         # If the stream is an integer, assume an open file descriptor
         if isinstance(input, int):
             if sys.platform.lower().startswith("win"):
-                raise NotImplementedError('File descriptor support not implemented on Windows')
+                raise NotImplementedError(
+                    "File descriptor support not implemented on Windows"
+                )
 
             self._msfp = ct.c_void_p(self.ms3_mstl_init_fd(input))
-            self.stream_name = bytes(f'File Descriptor {input}', 'utf-8')
+            self.stream_name = bytes(f"File Descriptor {input}", "utf-8")
 
             if self._msfp is None:
-                raise MseedLibError(MS_GENERROR, f'Error initializing file descriptor {input}')
+                raise MseedLibError(
+                    MS_GENERROR, f"Error initializing file descriptor {input}"
+                )
 
         # Otherwise, assume a path name
         else:
-            self.stream_name = bytes(input, 'utf-8')
+            self.stream_name = bytes(input, "utf-8")
 
     def __enter__(self):
         return self
@@ -82,16 +102,28 @@ class MS3RecordReader():
             raise StopIteration
 
     def read(self) -> MS3Record:
-        status = self.ms3_readmsr_selection(ct.byref(self._msfp), ct.byref(self._msr),
-                                            self.stream_name, self.parse_flags, self._selections, self.verbose)
+        status = self.ms3_readmsr_selection(
+            ct.byref(self._msfp),
+            ct.byref(self._msr),
+            self.stream_name,
+            self.parse_flags,
+            self._selections,
+            self.verbose,
+        )
 
         if status == MS_NOERROR:
             return ct.cast(self._msr, ct.POINTER(MS3Record)).contents
         elif status == MS_ENDOFFILE:
             return None
         else:
-            raise MseedLibError(status, f'Error reading miniSEED record')
+            raise MseedLibError(status, f"Error reading miniSEED record")
 
     def close(self) -> None:
-        self.ms3_readmsr_selection(ct.byref(self._msfp), ct.byref(self._msr),
-                                   None, self.parse_flags, self._selections, self.verbose)
+        self.ms3_readmsr_selection(
+            ct.byref(self._msfp),
+            ct.byref(self._msr),
+            None,
+            self.parse_flags,
+            self._selections,
+            self.verbose,
+        )

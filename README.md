@@ -13,6 +13,12 @@ The [releases](https://pypi.org/project/mseedlib/) should be installed
 directly from PyPI with, for example, `pip install mseedlib`.
 The package does not depend on anything other than the Python standard library.
 
+If developing use optional dependency "dev"
+e.g. `pip install mseedlib[dev]`.
+
+If using numpy features use optinal dependency "numpy"
+e.g. `pip install mseedlib[numpy]`.
+
 ## Example usage
 
 Working programs for a variety of use cases ca be found in the

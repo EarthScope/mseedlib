@@ -27,6 +27,8 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Development environment
+.vscode/
+.venv/
 venv/
 src/mseedlib/libmseed.h
 
