@@ -17,11 +17,6 @@ class MS3RecordPtr(ct.Structure):
             f'{self.filename.decode("utf-8")}, '
             f"byte offset: {self.fileoffset}"
         )
-        return (
-            f"Pointer to {self.msr.sourceid}, "
-            f'{self.filename.decode("utf-8")}, '
-            f"byte offset: {self.fileoffset}"
-        )
 
     @property
     def msr(self) -> MS3Record:
