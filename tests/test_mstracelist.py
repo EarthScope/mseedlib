@@ -9,8 +9,17 @@ from mseedlib import (
     sampletime,
     MseedLibError,
 )
+from mseedlib import (
+    MSTraceList,
+    TimeFormat,
+    SubSecond,
+    timestr2nstime,
+    sampletime,
+    MseedLibError,
+)
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
+test_path3 = os.path.join(test_dir, "data", "testdata-COLA-signal.mseed3")
 test_path3 = os.path.join(test_dir, "data", "testdata-COLA-signal.mseed3")
 
 
@@ -19,6 +28,11 @@ def test_tracelist_read():
 
     assert mstl.numtraceids == 3
 
+    assert mstl.sourceids() == [
+        "FDSN:IU_COLA_00_B_H_1",
+        "FDSN:IU_COLA_00_B_H_2",
+        "FDSN:IU_COLA_00_B_H_Z",
+    ]
     assert mstl.sourceids() == [
         "FDSN:IU_COLA_00_B_H_1",
         "FDSN:IU_COLA_00_B_H_2",
@@ -46,6 +60,7 @@ def test_tracelist_read():
     assert segment.samplecnt == 84000
     assert segment.numsamples == 84000
     assert segment.sampletype == "i"
+    assert segment.sampletype == "i"
 
     # Data sample array tests
     data = segment.datasamples
@@ -58,7 +73,9 @@ def test_tracelist_read():
 
     # Search for a specific TraceID
     foundid = mstl.get_traceid("FDSN:IU_COLA_00_B_H_Z")
+    foundid = mstl.get_traceid("FDSN:IU_COLA_00_B_H_Z")
 
+    assert foundid.sourceid == "FDSN:IU_COLA_00_B_H_Z"
     assert foundid.sourceid == "FDSN:IU_COLA_00_B_H_Z"
     assert foundid.pubversion == 4
     assert foundid.earliest == 1267253400019539000
@@ -165,6 +182,11 @@ def test_tracelist_read_recordlist():
         "FDSN:IU_COLA_00_B_H_2",
         "FDSN:IU_COLA_00_B_H_Z",
     ]
+    assert mstl.sourceids() == [
+        "FDSN:IU_COLA_00_B_H_1",
+        "FDSN:IU_COLA_00_B_H_2",
+        "FDSN:IU_COLA_00_B_H_Z",
+    ]
 
     # Search for a specific trace ID
     foundid = mstl.get_traceid("FDSN:IU_COLA_00_B_H_Z")
@@ -187,8 +209,24 @@ def test_tracelist_read_recordlist():
         -231437,
         -231474,
     ]
+    assert foundseg.datasamples[0:6] == [
+        -231394,
+        -231367,
+        -231376,
+        -231404,
+        -231437,
+        -231474,
+    ]
 
     # Check last 6 samples
+    assert foundseg.datasamples[-6:] == [
+        -165263,
+        -162103,
+        -159002,
+        -155907,
+        -152810,
+        -149774,
+    ]
     assert foundseg.datasamples[-6:] == [
         -165263,
         -162103,
