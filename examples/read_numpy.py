@@ -49,15 +49,6 @@ for traceid in mstl.traceids():
             "start_time": segment.starttime_str(),
             "end_time": segment.endtime_str(),
             "sample_rate": segment.samprate,
-            "data_samples": data_samples,
-        }
-        trace = {
-            "sourceid": traceid.sourceid,
-            "NSLC": sourceid2nslc(traceid.sourceid),
-            "publication_version": traceid.pubversion,
-            "start_time": segment.starttime_str(),
-            "end_time": segment.endtime_str(),
-            "sample_rate": segment.samprate,
             "data_samples": segment.np_datasamples,
         }
 
