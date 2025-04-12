@@ -65,6 +65,32 @@ def test_msrecord_read_buffer_details():
             assert data[-6:] == [-508722, -508764, -508809, -508866, -508927, -508986]
 
 
+def test_msrecord_numpy():
+    np = pytest.importorskip("numpy")
+
+    # Read data from test file into a buffer
+    with open(test_path3, "rb") as fp:
+        buffer = bytearray(fp.read())
+
+        with MS3RecordBufferReader(buffer, unpack_data=True) as msreader:
+
+            # Read first record
+            msr = msreader.read()
+
+            # Data sample array tests
+            data = msr.np_datasamples
+
+            # Check first 6 samples
+            assert np.all(
+                data[0:6] == [-502916, -502808, -502691, -502567, -502433, -502331]
+            )
+
+            # Check last 6 samples
+            assert np.all(
+                data[-6:] == [-508722, -508764, -508809, -508866, -508927, -508986]
+            )
+
+
 def test_msrecord_read_buffer_summary():
     # Read data from test file into a buffer
     with open(test_path2, "rb") as fp:

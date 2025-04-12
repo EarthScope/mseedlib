@@ -15,7 +15,6 @@
 import os
 import sys
 import pprint
-import numpy as np
 from mseedlib import MSTraceList, sourceid2nslc
 
 input_files = []
@@ -33,9 +32,6 @@ if not input_files:
 # List of dictionaries for each trace
 traces = []
 
-# Translate libmseed sample type to numpy type
-nptype = {"i": np.int32, "f": np.float32, "d": np.float64, "t": np.char}
-
 mstl = MSTraceList()
 
 # Read all input files, creating a record lists and _not_ unpacking data samples
@@ -45,20 +41,6 @@ for file in input_files:
 
 for traceid in mstl.traceids():
     for segment in traceid.segments():
-        # Fetch estimated sample size and type
-        (sample_size, sample_type) = segment.sample_size_type
-
-        dtype = nptype[sample_type]
-
-        # Allocate NumPy array for data samples
-        data_samples = np.zeros(segment.samplecnt, dtype=dtype)
-
-        # Unpack data samples into allocated NumPy array
-        segment.unpack_recordlist(
-            buffer_pointer=np.ctypeslib.as_ctypes(data_samples),
-            buffer_bytes=data_samples.nbytes,
-        )
-
         # Create a dictionary for the trace with basic metadata
         trace = {
             "sourceid": traceid.sourceid,
@@ -67,7 +49,7 @@ for traceid in mstl.traceids():
             "start_time": segment.starttime_str(),
             "end_time": segment.endtime_str(),
             "sample_rate": segment.samprate,
-            "data_samples": data_samples,
+            "data_samples": segment.np_datasamples,
         }
 
         traces.append(trace)
