@@ -66,11 +66,14 @@ def test_msrecord_read_record_details_fd():
     if sys.platform.lower().startswith("win"):
         return
 
-    # Using a file for tesing, but this could be stdin or any other input stream
-    fp = open(test_path2, "rb", buffering=0)
+    # Using a file for testing, but this could be stdin or any other input stream
+    file_descriptor = None
+    with open(test_path2, "rb", buffering=0) as fp:
+        original_file_descriptor = fp.fileno()
+        file_descriptor = os.dup(original_file_descriptor)
 
     # Provide the reader with the file descriptor
-    with MS3RecordReader(fp.fileno(), unpack_data=True) as msreader:
+    with MS3RecordReader(file_descriptor, unpack_data=True) as msreader:
         # Read first record
         msr = msreader.read()
 
