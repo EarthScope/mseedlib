@@ -10,7 +10,7 @@ python3 -m venv venv
 source ./venv/bin/activate
 
 ## Install the module locally using the source in-place
-python3 -m pip install --editable .[dev, numpy]
+python3 -m pip install --editable '.[dev, numpy]'
 
 # Testing
 
@@ -26,7 +26,16 @@ src/mseedlib/__version__.py
 
 The versioning follows the semantic versioning definition.
 
+
 # Building distribution packages
+
+Distributions are built automatically by a GitHub Action when a
+release is created.
+
+## Triggering GitHub Actions using GH CLI
+gh workflow run BuildRelease --ref <branch>
+
+# Building distribution packages manually for testing
 
 ## Ensure required build modules are installed
 python3 -m pip install build twine
@@ -35,11 +44,12 @@ python3 -m pip install build twine
 python3 -m build
 
 ## Test and upload to PyPI
+
+Official releases should be built by the GitHub Action, this
+is only needed in special cases, or more likely nevermore.
+
 python3 -m twine check --strict dist/*
 python3 -m twine upload dist/*
 
 ## To clean a build (requires hatch)
 hatch clean
-
-## Triggering GitHub Actions using GH CLI
-gh workflow run BuildRelease --ref <branch>
