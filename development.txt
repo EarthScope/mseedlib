@@ -32,6 +32,14 @@ The versioning follows the semantic versioning definition.
 Distributions are built automatically by a GitHub Action when a
 release is created.
 
+The Action has a workflow_dispatch trigger that allows manually
+triggering of the build process from here:
+https://github.com/EarthScope/mseedlib/actions/workflows/release.yml
+
+This is convenient for testing the build process prior to creating
+a new release.  These wheels will not be published to PyPI, that only
+happens for releases created on github.com
+
 ## Triggering GitHub Actions using GH CLI
 gh workflow run BuildRelease --ref <branch>
 
