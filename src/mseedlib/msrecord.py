@@ -580,3 +580,63 @@ _msr3_pack = wrap_function(
         ct.c_int8,
     ],
 )
+
+
+def binary_compare_records(record1: MS3Record, record2: MS3Record) -> bool:
+    return record1.record == record2.record
+
+
+def logically_compare_records(record1: MS3Record, record2: MS3Record) -> (bool, dict):
+    """
+    Compare two MS3Record instances logically, ignoring certain fields.
+    Returns a tuple of (match, match_dict) where:
+    - match: True if all compared fields match, False otherwise
+    - match_dict: Dictionary with comparison results for each field
+
+    The following fields are compared:
+        crc
+        datalength
+        encoding
+        endtime
+        flags
+        formatversion
+        numsamples
+        pubversion
+        reclen
+        samplecnt
+        sampletype
+        samprate
+        sourceid
+        starttime
+        swapflag
+        datasamples
+
+    The following fields are NOT compared:
+        datasize
+        extra
+        extralength
+        record
+        endtime_seconds # derived from endtime
+        starttime_seconds # derived from starttime
+        samprate_raw
+    """
+
+    match_dict = {
+        "crc": record1.crc == record2.crc,
+        "datalength": record1.datalength == record2.datalength,
+        "encoding": record1.encoding == record2.encoding,
+        "endtime": record1.endtime == record2.endtime,
+        "flags": record1.flags == record2.flags,
+        "formatversion": record1.formatversion == record2.formatversion,
+        "numsamples": record1.numsamples == record2.numsamples,
+        "pubversion": record1.pubversion == record2.pubversion,
+        "reclen": record1.reclen == record2.reclen,
+        "samplecnt": record1.samplecnt == record2.samplecnt,
+        "sampletype": record1.sampletype == record2.sampletype,
+        "samprate": record1.samprate == record2.samprate,
+        "sourceid": record1.sourceid == record2.sourceid,
+        "starttime": record1.starttime == record2.starttime,
+        "swapflag": record1.swapflag == record2.swapflag,
+        "datasamples": record1.datasamples == record2.datasamples,
+    }
+    return all(match_dict.values()), match_dict

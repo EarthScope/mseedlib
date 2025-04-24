@@ -1,16 +1,13 @@
 import pytest
 import os
 import json
-import math
 import ctypes as ct
 from mseedlib import MS3Record, DataEncoding
+from .conftest import sine_500
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
 test_pack3 = os.path.join(test_dir, "data", "packtest_sine500.mseed3")
 test_pack2 = os.path.join(test_dir, "data", "packtest_sine500.mseed2")
-
-# A sine wave of 500 samples
-sine_500 = list(map(lambda x: int(math.sin(math.radians(x)) * 500), range(0, 500)))
 
 # A global record buffer
 record_buffer = b""
