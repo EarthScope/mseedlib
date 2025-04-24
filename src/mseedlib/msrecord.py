@@ -142,7 +142,7 @@ class MS3Record(ct.Structure):
         """Set source identifier
 
         The source identifier is limited to 64 characters.
-        Typicall this is an FDSN Source Identifier:
+        Typically this is an FDSN Source Identifier:
         https://docs.fdsn.org/projects/source-identifiers
         """
         self._sid = bytes(value, "utf-8")

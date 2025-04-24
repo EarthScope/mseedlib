@@ -26,11 +26,21 @@ ms_encoding_sizetype = wrap_function(
     [ct.c_uint8, ct.POINTER(ct.c_uint8), ct.c_char_p],
 )
 
-ms_sid2nslc = wrap_function(
+ms_sid2nslc_n = wrap_function(
     clibmseed,
-    "ms_sid2nslc",
+    "ms_sid2nslc_n",
     ct.c_int,
-    [ct.c_char_p, ct.c_char_p, ct.c_char_p, ct.c_char_p, ct.c_char_p],
+    [
+        ct.c_char_p,
+        ct.c_char_p,
+        ct.c_size_t,
+        ct.c_char_p,
+        ct.c_size_t,
+        ct.c_char_p,
+        ct.c_size_t,
+        ct.c_char_p,
+        ct.c_size_t,
+    ],
 )
 
 ms_nslc2sid = wrap_function(
@@ -81,12 +91,15 @@ def timestr2nstime(timestr: str) -> int:
 
 def sourceid2nslc(sourceid: str) -> tuple:
     """Convert an FDSN source ID to a tuple of (net, sta, loc, chan)"""
-    net = ct.create_string_buffer(11)
-    sta = ct.create_string_buffer(11)
-    loc = ct.create_string_buffer(11)
-    chan = ct.create_string_buffer(11)
+    max_size = 11
+    net = ct.create_string_buffer(max_size)
+    sta = ct.create_string_buffer(max_size)
+    loc = ct.create_string_buffer(max_size)
+    chan = ct.create_string_buffer(max_size)
 
-    status = ms_sid2nslc(sourceid.encode(), net, sta, loc, chan)
+    status = ms_sid2nslc_n(
+        sourceid.encode(), net, max_size, sta, max_size, loc, max_size, chan, max_size
+    )
 
     if status == 0:
         return (

@@ -54,7 +54,7 @@ MSSWAP_PAYLOAD = ct.c_uint8(0x02)  # Data payload needed byte swapping
 
 
 class ctypesEnum(IntEnum):
-    """A ctypes-compatible IntEnum superclass/"""
+    """A ctypes-compatible IntEnum superclass"""
 
     @classmethod
     def from_param(cls, obj):
