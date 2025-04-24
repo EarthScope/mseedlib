@@ -103,6 +103,8 @@ with open(output_file, 'wb') as file_handle:
   # Generate miniSEED records
   mstl.pack(record_handler,
             {'fh':file_handle},
+            format_version=format_version,
+            record_length=record_length,
             flush_data=True)
 ```
 
