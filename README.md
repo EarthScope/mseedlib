@@ -1,4 +1,32 @@
-# mseedlib - a Python package to read and write miniSEED formatted data
+> [!CAUTION]
+> This repository is at an end, but lives on in https://github.com/EarthScope/pymseed
+
+The good: a Python package wrapping libmseed lives on in [pymseed](https://github.com/EarthScope/pymseed), get it with `pip install pymseed`.
+The bad: this package and repository are abandoned
+The ugly:
+```
+                                               .'.'`'.
+                                               /     |
+                                              |      |
+                                              |      | .--.
+                                              |      |/   |
+                                              |      ||   |
+                                              |      | \  |
+                                              |      |  `'
+                                            .'|      |
+              ________________             /  |      |
+             /                \           |   `'--.  |
+            |                  |          |      /   |
+            |     R. I. P.     |           `'--'`    |
+            |                  |              |      |
+            |                  |              |      |
+            |__________________|              |      |
+           /                  /|              |      |
+          /__________________/ |          ,',"|      |",',
+__________|__________________|/_________ ~"~"`"~"~"`"~"~`"~
+```
+
+# mseedlib - a retired Python package to read and write miniSEED formatted data
 
 The mseedlib package allows for reading and writing of [miniSEED](https://docs.fdsn.org/projects/miniseed3)
 formatted data, which is commonly used for seismological and other geophysical
