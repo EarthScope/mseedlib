@@ -4,16 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mseedlib"
-description = "A Python package for reading and writing miniSEED formatted data"
+description = "⚠️ DEPRECATED: This project is no longer maintained, use pymseed instead"
 authors = [
     { name = "EarthScope Data Services", email = "software@earthscope.org" },
 ]
 readme = "README.md"
 requires-python = ">=3.9"
-keywords = ["seismology", "miniseed", "mseed", "data", "waveform", "seismic"]
+keywords = ["seismology", "miniseed", "mseed", "data", "waveform", "seismic", "deprecated"]
 license = { text = "Apache-2.0" }
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 7 - Inactive",
     "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
@@ -42,7 +42,6 @@ numpy = [
 
 [project.urls]
 Homepage = "https://github.com/EarthScope/mseedlib"
-Issues = "https://github.com/EarthScope/mseedlib/issues"
 
 [tool.hatch.version]
 path = "src/mseedlib/__version__.py"

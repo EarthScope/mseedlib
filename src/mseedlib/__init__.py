@@ -1,3 +1,4 @@
+import warnings
 from .__version__ import __version__, libmseed_version
 from .definitions import (
     NSTERROR,
@@ -20,13 +21,20 @@ from .util import (
     sampletime,
 )
 
+# Issue deprecation warning when the package is imported
+warnings.warn(
+    "mseedlib is deprecated and no longer maintained. Please use pymseed instead: https://pypi.org/project/pymseed/",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 
 __all__ = [
     "__version__",
     "libmseed_version",
     "NSTERROR",
     "NSTUNSET",
-    "NSTLMODULUS",
+    "NSTMODULUS",
     "DataEncoding",
     "TimeFormat",
     "SubSecond",

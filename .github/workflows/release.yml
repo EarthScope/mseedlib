@@ -87,3 +87,12 @@ jobs:
         # To test:
         #with:
           #repository-url: https://test.pypi.org/legacy/
+
+      - name: Sync README-docker.md with Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+            username: ${{ secrets.DOCKER_USERNAME }}
+            password: ${{ secrets.DOCKER_PASSWORD }}
+            repository: earthscope/mseedlib
+            readme-filepath: ./README.md
+            short-description: "mseedlib - a retired package"

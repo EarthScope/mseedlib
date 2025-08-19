@@ -1,4 +1,5 @@
 import ctypes as ct
+import warnings
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .exceptions import *
@@ -21,6 +22,11 @@ class MS3RecordBufferReader:
 
     def __init__(self, source, unpack_data=False, validate_crc=True, verbose=0):
         super().__init__()
+        warnings.warn(
+            "MS3RecordBufferReader is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
         self._msr = ct.c_void_p(None)
         self.source = source

@@ -1,5 +1,6 @@
 import ctypes as ct
 import time
+import warnings
 from typing import Any
 from .clib import clibmseed, wrap_function
 from .definitions import *
@@ -434,6 +435,11 @@ class MSTraceList:
         split_version=False,
         verbose=0,
     ):
+        warnings.warn(
+            "MSTraceList is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.parse_flags = ct.c_uint32(0)
         self.record_list = ct.c_int8(0)
         self.split_version = ct.c_int8(0)

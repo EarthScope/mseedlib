@@ -1,4 +1,5 @@
 import ctypes as ct
+import warnings
 from .clib import clibmseed, wrap_function
 from .definitions import *
 
@@ -69,6 +70,11 @@ def nstime2timestr(
     subsecond=SubSecond.NANO_MICRO_NONE,
 ):
     """Convert a nanosecond timestamp to a date-time string"""
+    warnings.warn(
+        "nstime2timestr is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     c_timestr = ct.create_string_buffer(40)
 
     status = ms_nstime2timestr(nstime, c_timestr, timeformat, subsecond)
@@ -81,6 +87,11 @@ def nstime2timestr(
 
 def timestr2nstime(timestr: str) -> int:
     """Convert a date-time string to a nanosecond timestamp"""
+    warnings.warn(
+        "timestr2nstime is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     status = ms_timestr2nstime(timestr.encode())
 
     if status != NSTERROR:
@@ -91,6 +102,11 @@ def timestr2nstime(timestr: str) -> int:
 
 def sourceid2nslc(sourceid: str) -> tuple:
     """Convert an FDSN source ID to a tuple of (net, sta, loc, chan)"""
+    warnings.warn(
+        "sourceid2nslc is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     max_size = 11
     net = ct.create_string_buffer(max_size)
     sta = ct.create_string_buffer(max_size)
@@ -114,6 +130,11 @@ def sourceid2nslc(sourceid: str) -> tuple:
 
 def nslc2sourceid(net: str, sta: str, loc: str, chan: str) -> str:
     """Convert network, station, location, channel codes to an FDSN source ID"""
+    warnings.warn(
+        "nslc2sourceid is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     # sourceid = ct.create_string_buffer(LM_SIDLEN + 1)
     sourceid = ct.create_string_buffer(21)
 
@@ -135,4 +156,9 @@ def nslc2sourceid(net: str, sta: str, loc: str, chan: str) -> str:
 
 def sampletime(nstime: int, offset: int, samprate: float) -> int:
     """Calculate nanosecond timestamp of a sample offset from a start time"""
+    warnings.warn(
+        "sampletime is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return ms_sampletime(nstime, offset, samprate)

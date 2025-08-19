@@ -1,5 +1,6 @@
 import ctypes as ct
 import json
+import warnings
 from typing import Optional, Any
 from .clib import clibmseed, wrap_function
 from .definitions import *
@@ -40,6 +41,11 @@ class MS3Record(ct.Structure):
 
     # Set defaults matching msr3_init()
     def __init__(self, reclen=-1, encoding=-1, samplecnt=-1):
+        warnings.warn(
+            "MS3Record is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         super().__init__(_reclen=reclen, _encoding=encoding, _samplecnt=samplecnt)
 
     def __repr__(self) -> str:

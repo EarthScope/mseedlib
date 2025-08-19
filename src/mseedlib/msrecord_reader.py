@@ -1,5 +1,6 @@
 import sys
 import ctypes as ct
+import warnings
 from .clib import clibmseed, wrap_function
 from .definitions import *
 from .exceptions import *
@@ -32,6 +33,11 @@ class MS3RecordReader:
         verbose=0,
     ):
         super().__init__()
+        warnings.warn(
+            "MS3RecordReader is deprecated. mseedlib is no longer maintained, use pymseed instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
         self._msfp = ct.c_void_p(None)
         self._msr = ct.c_void_p(None)
